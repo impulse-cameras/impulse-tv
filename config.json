@@ -1,23 +1,5 @@
 {
  "goal": null,
- "poll": {
-  "question": "Dream full-frame: pick one",
-  "options": [
-   [
-    "Sony a1 II",
-    44
-   ],
-   [
-    "Nikon Z8",
-    31
-   ],
-   [
-    "Canon R5 II",
-    25
-   ]
-  ],
-  "note": "Tell the counter your pick \u2014 we tally daily"
- },
  "ticker": [
   "Follow @impulse.mke \u2014 the number on this screen is live",
   "Renting for the weekend? Ask at the counter",
