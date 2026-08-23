@@ -184,10 +184,7 @@ var SHOP_QR = {"impulse": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0
   }
 
   window.onYouTubeIframeAPIReady = function () {
-    player = new YT.Player('player', {
-      videoId: firstId,
-      playerVars: pv,
-      events: {
+    var opts = { playerVars: pv, events: {
         onReady: function (e) {
           document.getElementById('msg').style.display='none';
           e.target.mute();
@@ -213,8 +210,12 @@ var SHOP_QR = {"impulse": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0
             checkShort(e.target, 0);
           }
         }
-      }
-    });
+    } };
+    // Only set videoId on the explicit-id path. Passing videoId:undefined on the
+    // playlist path makes the API build an EMPTY iframe src and the page hangs
+    // on "Loading…" forever.
+    if (firstId) opts.videoId = firstId;
+    player = new YT.Player('player', opts);
   };
 
   setTimeout(function () {
