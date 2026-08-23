@@ -19,8 +19,9 @@ is all it needs.
 
     https://impulse-cameras.github.io/impulse-tv/?v=nikon
 
-| `?v=` | Vendor |
+| `?v=` | Channel |
 | --- | --- |
+| `impulse` | **Impulse Cameras (our own channel)** |
 | `nikon` | Nikon |
 | `canon` | Canon |
 | `sony` | Sony |
