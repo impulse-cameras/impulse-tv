@@ -75,20 +75,29 @@
   .bt-champ{margin-top:auto;font-size:1.05em;color:var(--muted)}
   .bt-champ b{color:var(--gold)}
   .bt-arena{position:absolute;left:25em;right:2.6em;top:9em;bottom:2.4em;z-index:4;
-    display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:1em}
+    display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:1em}
   .bt-empty{grid-column:1/-1;display:flex;align-items:center;justify-content:center;
     color:var(--muted);font-family:var(--disp);font-weight:700;font-size:1.6em;
     border:2px dashed var(--line);border-radius:1em;text-align:center;padding:2em}
   .bt-e{position:relative;border-radius:.8em;overflow:hidden;border:1px solid var(--line);
     background:var(--panel)}
-  .bt-e img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  /* Entries arrive in every orientation — mostly vertical phone shots, but
+     also landscape camera frames. object-fit:cover on a wide tile threw away
+     ~74% of a 9:16 photo, so the shot is CONTAINed and a blurred copy of
+     itself fills the letterbox behind it. Nothing gets cropped. */
+  .bt-e .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    filter:blur(1.4em) brightness(.45) saturate(1.3);transform:scale(1.15)}
+  .bt-e img.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .bt-e .m{position:absolute;left:0;right:0;bottom:0;padding:.9em 1em .7em;
     background:linear-gradient(transparent,rgba(0,0,0,.85));
     display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;font-size:1.1em}
   .bt-e .m .n{font-weight:700}
   .bt-e .m .v{color:var(--teal-hi);font-variant-numeric:tabular-nums;font-weight:700}
+  /* Long camera names ("Blackmagic Design PYXIS 6K") do not fit one line on a
+     narrow tile — wrap to at most two rather than ellipsing the model away. */
   .bt-e .m .sh{flex-basis:100%;font-size:.78em;color:var(--muted);margin-top:.15em;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;white-space:normal}
   .bt-e .m .sh i{font-style:normal;opacity:.65;letter-spacing:.06em;
     text-transform:uppercase;font-size:.9em}
   .bt-e .m .sh em{font-style:normal;color:var(--teal-hi);margin-left:.6em;
@@ -96,7 +105,7 @@
   /* Small tiles only have room for the body; the 2x2 lead tile also gets
      the exposure line. */
   .bt-e .m .sh em{display:none}
-  .bt-e.lead .m .sh{font-size:.62em;white-space:normal}
+  .bt-e.lead .m .sh{font-size:.62em}
   .bt-e.lead .m .sh em{display:inline}
   .bt-e.lead{grid-row:span 2;grid-column:span 2;border:2px solid var(--gold)}
   .bt-e.lead .m{font-size:1.35em}
@@ -347,7 +356,10 @@ function renderBattle(){
     var d = document.createElement('div');
     d.className = 'bt-e' + (i===0 && e.votes>0 ? ' lead' : '') +
                   (!firstDraw && !seenBt[e.id] ? ' new' : '');
+    var bg = document.createElement('img');
+    bg.className = 'bg'; bg.src = BIMG + e.id + '.jpg'; bg.alt='';
     var img = document.createElement('img');
+    img.className = 'ph';
     img.src = BIMG + e.id + '.jpg'; img.alt='';
     img.onerror = function(){ d.style.opacity = .35; };
     var m = document.createElement('div'); m.className='m';
@@ -356,7 +368,7 @@ function renderBattle(){
                   '</span><span class="v">&hearts; '+e.votes+'</span>'+
                   (x.cam ? '<span class="sh"><i>Shot on</i> '+escT(x.cam)+
                     (x.settings ? '<em>'+escT(x.settings)+'</em>' : '')+'</span>' : '');
-    d.appendChild(img); d.appendChild(m); arena.appendChild(d);
+    d.appendChild(bg); d.appendChild(img); d.appendChild(m); arena.appendChild(d);
     seenBt[e.id] = 1;
   });
 }
