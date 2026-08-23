@@ -44,8 +44,19 @@ Ad-hoc playlist, no vendor entry needed:
 
 ## Playlist IDs
 
-Each `list` is the channel's **uploads** playlist — the channel ID with `UC`
-swapped for `UU`. It updates itself as the vendor publishes, so no maintenance.
+Each vendor's `list` is the channel's **uploads** playlist — the channel ID with
+`UC` swapped for `UU`. It updates itself as the vendor publishes, so no
+maintenance.
+
+**Exception — `?v=impulse` (Register 2).** Impulse's own uploads playlist
+(`UUjnUqmGx9ObLZd9mps7z2Qw`) is **not embeddable**: it renders "This video is
+unavailable" even though the individual videos embed fine. That screen therefore
+runs an explicit `ids` list of the channel's 30 long-form videos. It does **not**
+self-update — refresh it with `tools/signage/refresh_impulse_ids.sh` in the vault,
+rebuild, and push.
+
+To make it self-updating, create a **public** playlist on the Impulse channel and
+swap that entry from `ids` to `list: "PL..."`.
 
 ## Robustness
 
