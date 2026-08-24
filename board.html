@@ -222,6 +222,25 @@ fetch('config.json?cb=' + Date.now()).then(function(r){return r.json()})
   .then(function(c){ config = c; render(); }).catch(function(){ config = {}; });
 poll();
 setInterval(poll, 75000);
+
+/* Fast path for the follower number only. The relay Worker holds a value the
+   store Mac pushes every ~20s; this polls it every 4s. The GitHub poll above
+   stays at 75s because the contents API is capped at 60 req/hr/IP — that cap
+   is the entire reason this second path exists. If the relay is unreachable
+   we simply keep whatever the 75s poll last gave us. */
+var RELAY = 'https://impulse-live-relay.sales-0f1.workers.dev/live';
+function fastPoll(){
+  fetch(RELAY, {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(function(d){
+      if (!live || !d || typeof d.followers !== 'number') return;
+      if (d.followers === live.followers) return;   /* no re-render when unchanged */
+      live.followers = d.followers;
+      render();                                     /* renderA/renderB celebrate the delta */
+    })
+    .catch(function(){});
+}
+if (RELAY.indexOf('http') === 0){ fastPoll(); setInterval(fastPoll, 4000); }
 setTimeout(function(){ location.reload(); }, 6*3600*1000); /* hygiene reload */
 
 function fmt(n){ return n.toLocaleString('en-US'); }
