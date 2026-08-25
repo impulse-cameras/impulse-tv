@@ -38,7 +38,10 @@
   .shop-cta{font-size:1.25vw;font-weight:700;text-align:center;line-height:1.25}
   .shop-sub{font-size:.9vw;color:var(--teal);text-align:center}
 
-  #socials{display:grid;grid-template-columns:1fr 1fr;gap:.7vw}
+  /* Was a 2-column grid for the four platform tiles. With a single hub child
+     that grid parked it in column one, 94px left of the shop QR above it.
+     Centred now so the two QRs share a vertical axis. */
+  #socials{display:flex;justify-content:center}
   .soc{background:var(--panel2);border:1px solid #222;border-radius:.5vw;padding:.6vh .4vw;
         display:flex;flex-direction:column;align-items:center;gap:.35vh}
   .soc-qr{width:4.1vw;max-width:86px;aspect-ratio:1;background:transparent;padding:.2vw}
