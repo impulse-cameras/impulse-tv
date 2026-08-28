@@ -195,9 +195,22 @@
   .wn-card .sm{font-size:.95em;color:var(--muted);line-height:1.4}
   .wn-card .amt{color:var(--gold);font-weight:700}
 
+  /* "Just sold" crawl. Starts right of the fixed Wi-Fi box (left 14em) so the
+     two never overlap; hidden entirely until there is at least one sale. */
+  .wn-tick{position:absolute;left:14em;right:0;bottom:0;height:4.2em;
+    border-top:1px solid var(--line);background:var(--panel);
+    display:none;align-items:center;overflow:hidden;z-index:6}
+  .wn-tick.show{display:flex}
+  .wn-tick .in{white-space:nowrap;font-size:1.35em;color:var(--muted);
+    animation:tick 26s linear infinite;padding-left:100%}
+  .wn-tick .in b{color:var(--ink)}
+  .wn-tick .in em{font-style:normal;color:var(--gold);font-weight:700;
+    font-variant-numeric:tabular-nums}
+  .wn-tick .in .hm{color:#E11D2E}
+
   @media (prefers-reduced-motion: reduce){
     .fl,.cell.new,#odo .d.roll,.wn-pill .dot{animation:none}
-    .c-tick .in{animation-duration:90s}
+    .c-tick .in,.wn-tick .in{animation-duration:90s}
   }
 </style>
 </head>
@@ -261,6 +274,7 @@
       <div class="sm">New Whatnot accounts only &middot; credit issued by Whatnot</div>
     </div>
   </div>
+  <div class="wn-tick" id="wnTick"><div class="in" id="wnTickIn"></div></div>
 </section>
 
 <section class="scene" id="wall">
@@ -480,6 +494,32 @@ function renderB(){
 
 /* ---------- whatnot ---------- */
 var wnYtLoaded = false;
+/* "Just sold" items, staff-entered at the register (battle server /sell page),
+   pushed to sold.json on the data branch like everything else. */
+var SAPI = 'https://api.github.com/repos/impulse-cameras/impulse-tv/contents/sold.json?ref=data';
+var SRAW = 'https://raw.githubusercontent.com/impulse-cameras/impulse-tv/data/sold.json';
+function pollSold(){
+  fetch(SAPI, {headers:{'Accept':'application/vnd.github.raw'}})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(renderSold)
+    .catch(function(){
+      fetch(SRAW + '?cb=' + Date.now()).then(function(r){return r.json()})
+        .then(renderSold).catch(function(){});
+    });
+}
+if (MODE === 'whatnot'){ pollSold(); setInterval(pollSold, 75000); }
+function renderSold(d){
+  var items = (d && d.items) || [];
+  var cutoff = Date.now()/1000 - 12*3600;
+  items = items.filter(function(i){ return i.ts > cutoff; });
+  var bar = document.getElementById('wnTick');
+  if (!items.length){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  document.getElementById('wnTickIn').innerHTML = items.map(function(i){
+    return '<span class="hm">&#128296;</span> JUST SOLD&ensp;<b>' + escT(i.item) + '</b>' +
+           (i.price ? ' &mdash; <em>' + escT(i.price) + '</em>' : '');
+  }).join(' &nbsp;&nbsp;&middot;&nbsp;&nbsp; ');
+}
 function renderW(){
   document.getElementById('boot').style.display = 'none';
   var cfg = (config && config.whatnot) || {};
