@@ -161,12 +161,16 @@
   /* whatnot — the one scene that earns the red. #E11D2E is the established
      live-status color from the SMS/email playbook; teal stays for brand. */
   .wn-live{--red:#E11D2E}
-  /* bottom:5.6em on all three whatnot panels reserves the 4.2em sold-ticker
-     strip (+gap) so nothing overlaps it — verified at 1920x1080. The ticker is
-     full-width at the very bottom; these clear it whether or not it's showing. */
-  .wn-main{position:absolute;left:2.6em;right:27em;top:8em;bottom:5.6em;
+  /* The three whatnot panels sit at bottom:2.4em normally. When the sold
+     ticker is showing, JS adds .ticker-on to #whatnot and they lift to 6.6em —
+     clearing the 3.6em ticker with a ~3em margin. Dynamic so an empty ticker
+     doesn't leave dead space. Verified at 16:9 AND at browser-chrome ratios. */
+  .wn-main{position:absolute;left:2.6em;right:27em;top:8em;bottom:2.4em;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:1.6em;text-align:center}
+  #whatnot.ticker-on .wn-main,
+  #whatnot.ticker-on .wn-rail,
+  #whatnot.ticker-on #wnVideo{bottom:6.6em}
   .wn-pill{display:inline-flex;align-items:center;gap:.6em;background:#E11D2E;
     color:#fff;font-family:var(--disp);font-weight:900;font-size:1.5em;
     letter-spacing:.06em;padding:.55em 1.3em;border-radius:999px}
@@ -184,7 +188,7 @@
     margin-top:.9em}
   /* video slot: hidden while probing (the live_stream embed shows an ugly
      error card when the channel is offline — never let that reach the glass) */
-  #wnVideo{position:absolute;left:2.6em;right:27em;top:8em;bottom:5.6em;
+  #wnVideo{position:absolute;left:2.6em;right:27em;top:8em;bottom:2.4em;
     z-index:4;visibility:hidden;width:auto;height:auto}
   #wnVideo.show{visibility:visible}
   #wnVideo iframe,#wnVideo #wnPlayerEl{width:100%;height:100%;border:0}
@@ -194,27 +198,33 @@
     left:auto;right:29em}
   .wn-badge .dot{width:.55em;height:.55em;border-radius:50%;background:#fff;
     animation:blink 1.1s ease infinite}
-  .wn-rail{position:absolute;right:2.6em;top:8em;bottom:5.6em;width:22em;z-index:5;
-    display:flex;flex-direction:column;gap:1.2em}
+  /* Cards are intentionally compact: at the tighter aspect ratios a browser
+     window produces (chrome eats vertical space), oversized QR cards overflow
+     the rail into the ticker. These sizes leave clear margin at every ratio
+     tested (16:9 through ~1.4:1). */
+  .wn-rail{position:absolute;right:2.6em;top:8em;bottom:2.4em;width:20em;z-index:5;
+    display:flex;flex-direction:column;gap:1em;justify-content:center}
   .wn-card{background:var(--panel);border:1px solid var(--line);border-radius:1em;
-    padding:1.2em;display:flex;flex-direction:column;align-items:center;gap:.8em;
+    padding:.9em;display:flex;flex-direction:column;align-items:center;gap:.6em;
     text-align:center}
   .wn-card.bid{border-color:#E11D2E}
-  .wn-card .q{width:12em;height:12em}
-  .wn-card.credit .q{width:8.5em;height:8.5em}
+  .wn-card .q{width:9em;height:9em}
+  .wn-card.credit .q{width:6.8em;height:6.8em}
   .wn-card .q svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
-  .wn-card .big{font-family:var(--disp);font-weight:700;font-size:1.35em;line-height:1.2}
+  .wn-card .big{font-family:var(--disp);font-weight:700;font-size:1.2em;line-height:1.2}
   .wn-card.bid .big{color:#fff}
-  .wn-card .sm{font-size:.95em;color:var(--muted);line-height:1.4}
+  .wn-card .sm{font-size:.85em;color:var(--muted);line-height:1.4}
   .wn-card .amt{color:var(--gold);font-weight:700}
 
   /* "Just sold" crawl. Full-width — the Wi-Fi box is removed on this board.
      Hidden entirely until there is at least one sale. */
-  .wn-tick{position:absolute;left:0;right:0;bottom:0;height:4.2em;
+  .wn-tick{position:absolute;left:0;right:0;bottom:0;height:3.6em;
     border-top:1px solid var(--line);background:var(--panel);
     display:none;align-items:center;overflow:hidden;z-index:6}
   .wn-tick.show{display:flex}
-  .wn-tick .in{white-space:nowrap;font-size:1.35em;color:var(--muted);
+  /* duration is set inline by JS from the saved speed (px/sec) so the crawl
+     moves at a constant rate regardless of how many items are in it */
+  .wn-tick .in{white-space:nowrap;font-size:1.25em;color:var(--muted);
     animation:tick 26s linear infinite;padding-left:100%}
   .wn-tick .in b{color:var(--ink)}
   .wn-tick .in em{font-style:normal;color:var(--gold);font-weight:700;
@@ -551,17 +561,38 @@ function pollSold(){
     });
 }
 if (MODE === 'whatnot'){ pollSold(); setInterval(pollSold, 75000); }
+var wnTickHtml = '', wnTickSpeed = 0;
 function renderSold(d){
   var items = (d && d.items) || [];
   var cutoff = Date.now()/1000 - 12*3600;
   items = items.filter(function(i){ return i.ts > cutoff; });
   var bar = document.getElementById('wnTick');
-  if (!items.length){ bar.classList.remove('show'); return; }
+  var section = document.getElementById('whatnot');
+  if (!items.length){
+    bar.classList.remove('show');
+    if (section) section.classList.remove('ticker-on');
+    return;
+  }
   bar.classList.add('show');
-  document.getElementById('wnTickIn').innerHTML = items.map(function(i){
+  if (section) section.classList.add('ticker-on');
+  var inEl = document.getElementById('wnTickIn');
+  var html = items.map(function(i){
     return '<span class="hm">&#128296;</span> JUST SOLD&ensp;<b>' + escT(i.item) + '</b>' +
            (i.price ? ' &mdash; <em>' + escT(i.price) + '</em>' : '');
   }).join(' &nbsp;&nbsp;&middot;&nbsp;&nbsp; ');
+  /* speed = px/sec (staff slider on the /sell page); default 100. Duration is
+     travel-distance / speed so the crawl feels the same at any item count.
+     Only recompute when content or speed changed — avoids restarting the
+     animation on every 75s poll. */
+  var speed = (d && +d.speed) ? +d.speed : 140;
+  if (html === wnTickHtml && speed === wnTickSpeed) return;
+  wnTickHtml = html; wnTickSpeed = speed;
+  inEl.innerHTML = html;
+  /* reading offsetWidth forces a synchronous layout, so the measurement is
+     valid immediately — no requestAnimationFrame needed. offsetWidth includes
+     the padding-left:100%, i.e. one full loop's travel distance. */
+  var travel = inEl.offsetWidth;
+  if (travel > 0) inEl.style.animationDuration = Math.max(4, Math.round(travel / speed)) + 's';
 }
 function renderW(){
   document.getElementById('boot').style.display = 'none';
