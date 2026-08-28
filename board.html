@@ -161,7 +161,10 @@
   /* whatnot — the one scene that earns the red. #E11D2E is the established
      live-status color from the SMS/email playbook; teal stays for brand. */
   .wn-live{--red:#E11D2E}
-  .wn-main{position:absolute;left:2.6em;right:27em;top:8em;bottom:2.4em;
+  /* bottom:5.6em on all three whatnot panels reserves the 4.2em sold-ticker
+     strip (+gap) so nothing overlaps it — verified at 1920x1080. The ticker is
+     full-width at the very bottom; these clear it whether or not it's showing. */
+  .wn-main{position:absolute;left:2.6em;right:27em;top:8em;bottom:5.6em;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:1.6em;text-align:center}
   .wn-pill{display:inline-flex;align-items:center;gap:.6em;background:#E11D2E;
@@ -181,7 +184,7 @@
     margin-top:.9em}
   /* video slot: hidden while probing (the live_stream embed shows an ugly
      error card when the channel is offline — never let that reach the glass) */
-  #wnVideo{position:absolute;left:2.6em;right:27em;top:8em;bottom:2.4em;
+  #wnVideo{position:absolute;left:2.6em;right:27em;top:8em;bottom:5.6em;
     z-index:4;visibility:hidden;width:auto;height:auto}
   #wnVideo.show{visibility:visible}
   #wnVideo iframe,#wnVideo #wnPlayerEl{width:100%;height:100%;border:0}
@@ -191,7 +194,7 @@
     left:auto;right:29em}
   .wn-badge .dot{width:.55em;height:.55em;border-radius:50%;background:#fff;
     animation:blink 1.1s ease infinite}
-  .wn-rail{position:absolute;right:2.6em;top:8em;bottom:2.4em;width:22em;z-index:5;
+  .wn-rail{position:absolute;right:2.6em;top:8em;bottom:5.6em;width:22em;z-index:5;
     display:flex;flex-direction:column;gap:1.2em}
   .wn-card{background:var(--panel);border:1px solid var(--line);border-radius:1em;
     padding:1.2em;display:flex;flex-direction:column;align-items:center;gap:.8em;
