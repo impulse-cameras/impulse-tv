@@ -1,5 +1,12 @@
 {
  "goal": null,
+ "battle": {
+  "cycle": 180,
+  "spot": 10
+ },
+ "used": {
+  "secs": 8
+ },
  "whatnot": {
   "live": true,
   "next": "",
