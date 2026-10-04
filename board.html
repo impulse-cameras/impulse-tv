@@ -92,7 +92,7 @@
   #wifi .wt b{display:block;font-weight:800;color:#0e6b78;letter-spacing:.02em}
   .bt-arena{position:absolute;left:25em;right:2.6em;top:9em;bottom:2.4em;z-index:4;
     display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:1em}
-  .bt-empty{grid-column:1/-1;display:flex;align-items:center;justify-content:center;
+  .bt-empty{text-wrap:balance;grid-column:1/-1;display:flex;align-items:center;justify-content:center;
     color:var(--muted);font-family:var(--disp);font-weight:700;font-size:1.6em;
     border:2px dashed var(--line);border-radius:1em;text-align:center;padding:2em}
   .bt-e{position:relative;border-radius:.8em;overflow:hidden;border:1px solid var(--line);
@@ -333,10 +333,10 @@
   <div class="b-count"><div class="n" id="bCount"></div><div class="t">followers &middot; live</div></div>
   <div id="floats"></div>
   <div class="bt-side">
-    <div class="eyebrow">Monthly photo battle</div>
-    <h3 class="bt-h">Fight for<br>this screen</h3>
+    <div class="eyebrow" id="btEye">Monthly photo battle</div>
+    <h3 class="bt-h" id="btH">Fight for<br>this screen</h3>
     <div class="b-qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" class="segno"><path class="qrline" stroke="#fff" d="M2 2.5h7m2 0h1m1 0h1m8 0h1m1 0h7m-29 1h1m5 0h1m1 0h2m6 0h1m1 0h1m1 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h2m2 0h3m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h1m1 0h3m3 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m2 0h1m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m2 0h3m5 0h1m4 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m1 0h1m1 0h1m3 0h1m-17 1h1m5 0h1m1 0h4m5 0h6m2 0h3m-28 1h1m1 0h2m7 0h5m1 0h1m1 0h3m2 0h1m1 0h2m-23 1h2m1 0h2m1 0h5m1 0h1m5 0h2m-16 1h2m1 0h2m5 0h1m2 0h1m1 0h1m-24 1h2m1 0h1m1 0h3m1 0h1m1 0h2m1 0h1m5 0h2m5 0h1m-29 1h1m1 0h1m6 0h3m3 0h2m2 0h1m1 0h2m1 0h1m1 0h3m-26 1h1m2 0h2m1 0h1m1 0h2m2 0h4m1 0h3m3 0h1m-26 1h1m2 0h1m2 0h5m7 0h2m1 0h2m2 0h1m1 0h1m-28 1h3m2 0h2m1 0h2m6 0h2m1 0h2m4 0h1m-27 1h2m1 0h1m3 0h1m5 0h3m1 0h1m1 0h1m2 0h1m1 0h5m-29 1h4m2 0h1m1 0h1m3 0h1m2 0h3m1 0h1m3 0h1m4 0h1m-29 1h1m6 0h3m2 0h2m2 0h1m2 0h2m1 0h1m1 0h1m-25 1h1m3 0h1m1 0h1m4 0h2m1 0h2m1 0h1m2 0h5m1 0h3m-21 1h1m1 0h3m1 0h2m2 0h3m3 0h2m-26 1h7m3 0h1m4 0h1m1 0h4m1 0h1m1 0h3m-27 1h1m5 0h1m2 0h1m1 0h2m1 0h2m2 0h1m1 0h1m3 0h1m2 0h1m-28 1h1m1 0h3m1 0h1m2 0h7m3 0h6m3 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m4 0h5m1 0h1m2 0h1m4 0h1m-29 1h1m1 0h3m1 0h1m4 0h3m1 0h3m1 0h2m1 0h1m1 0h2m1 0h1m-28 1h1m5 0h1m2 0h3m4 0h1m5 0h3m1 0h1m1 0h1m-29 1h7m1 0h1m3 0h2m1 0h1m1 0h1m7 0h2"/></svg></div>
-    <div class="bt-copy">Scan on store Wi-Fi &middot; drop your shot &middot; vote for the champ. In-store only.</div>
+    <div class="bt-copy" id="btCopy">Scan on store Wi-Fi &middot; drop your shot &middot; vote for the champ. In-store only.</div>
     <div class="bt-reset">Resets <b id="btReset"></b></div>
     <div class="bt-champ" id="btChamp"></div>
   </div>
@@ -350,7 +350,7 @@
         <div class="sp-n" id="spName"></div>
         <div class="sp-m" id="spMeta"></div>
         <div class="sp-sh" id="spShot"></div>
-        <div class="sp-ig">&#128248; Featured on <b>@impulse.mke</b> &middot; scan to enter this month&rsquo;s battle</div>
+        <div class="sp-ig">&#128248; Featured on <b>@impulse.mke</b> &middot; <span id="spCta">scan to enter this month&rsquo;s battle</span></div>
       </div>
       <img class="ph" id="spPh" alt="">
     </div>
@@ -563,7 +563,33 @@ function burst(){
 })();
 
 /* ---------- play ---------- */
-var EMO = ['❤️','🔥','📸','🙌','💙','⚡'];
+/* ---------- monthly theme ----------
+   THEMES is tools/signage/battle_themes.json embedded at build time. The month
+   is read from THIS screen's clock, so the board flips to the next theme on
+   the 1st with no rebuild or redeploy. `&theme=YYYY-MM` overrides for testing.
+   Months with no entry fall back to "default". */
+var THEMES = {"_readme": "Photo Battle monthly themes (Travis, 2026-10-04). Keyed by YYYY-MM; any month without an entry uses \"default\". The phone page (battle_server.py, re-read on every request, no restart needed) and the board (build_boards.py embeds this file, then picks by the screen's own clock, so the board flips on the 1st with no rebuild) both read THIS file. Edit it, git pull on the claudebot Mac, rebuild the board with build_boards.py. EMOJI RULE: nothing newer than Unicode 11 (2018) -- the Fire TV / Ember on Android 9 draws newer emoji as empty boxes. Repeats in `emojis` are deliberate weighting (more repeats = floats up more often). `reviewBlocks` sends photos the AI check flags to staff review instead of rejecting them outright -- needed in months where the theme invites props (fake blood, skulls, knives).", "default": {"name": "Photo Battle", "emojis": ["\u2764\ufe0f", "\ud83d\udd25", "\ud83d\udcf8", "\ud83d\ude4c", "\ud83d\udc99", "\u26a1"], "board": {"eyebrow": "Monthly photo battle", "heading": ["Fight for", "this screen"], "copy": "Scan on store Wi-Fi \u00b7 drop your shot \u00b7 vote for the champ. In-store only.", "empty": "The board is open \u2014 be the first on it", "spotCta": "scan to enter this month\u2019s battle"}, "phone": {"sub": "One shot. One month. Most votes owns the big screen. Resets on the 1st.", "bannerTitle": "", "bannerText": ""}, "reviewBlocks": false}, "2026-10": {"name": "Halloween", "emojis": ["\ud83c\udf83", "\ud83c\udf83", "\ud83c\udf83", "\ud83d\udc7b", "\ud83d\udc7b", "\ud83d\udc7b", "\ud83d\ude08", "\ud83d\ude08", "\ud83d\udc7f", "\ud83d\udc79", "\ud83d\udc7a", "\ud83d\udc80", "\ud83d\udc80", "\u2620\ufe0f", "\ud83e\udd87", "\ud83e\udd87", "\ud83d\udd77\ufe0f", "\ud83d\udd78\ufe0f", "\ud83e\udddb", "\ud83e\udddf", "\ud83e\uddd9", "\ud83d\udd2e", "\ud83c\udf19", "\ud83d\udd6f\ufe0f", "\ud83c\udf6c"], "board": {"eyebrow": "Halloween photo battle", "heading": ["Haunt", "this screen"], "copy": "Scan on store Wi-Fi \u00b7 drop your spookiest, most eerie shot \u00b7 vote for the creepiest. In-store only.", "empty": "It\u2019s quiet in here\u2026 too quiet. Be the first to haunt the board", "spotCta": "scan to enter the Halloween battle"}, "phone": {"sub": "October\u2019s theme: your spookiest, most eerie shot. One shot. One month. Most votes owns the big screen. Resets on the 1st.", "bannerTitle": "\ud83c\udf83 Halloween month", "bannerText": "Upload your spookiest or most eerie photo. Fog, shadows, ghosts, costumes, creepy corners \u2014 anything that gives us chills."}, "reviewBlocks": true}, "2026-11": {"name": "Thanksgiving & Fall", "emojis": ["\ud83e\udd83", "\ud83e\udd83", "\ud83e\udd83", "\ud83c\udf42", "\ud83c\udf42", "\ud83c\udf42", "\ud83c\udf41", "\ud83c\udf41", "\ud83c\udf41", "\ud83e\udd67", "\ud83e\udd67", "\ud83c\udf3d", "\ud83c\udf4e", "\ud83e\udde1", "\ud83e\udde1", "\ud83c\udf30", "\ud83c\udf60", "\ud83c\udf57", "\ud83e\udde3", "\ud83d\udd6f\ufe0f", "\ud83c\udf3e", "\ud83d\ude4f"], "board": {"eyebrow": "Fall photo battle", "heading": ["Gobble up", "this screen"], "copy": "Scan on store Wi-Fi \u00b7 drop your favorite fall or thankful moment \u00b7 vote for the best. In-store only.", "empty": "Fall is in the air. Be the first on the board", "spotCta": "scan to enter the Thanksgiving battle"}, "phone": {"sub": "November\u2019s theme: fall colors, gratitude and a little turkey. One shot. One month. Most votes owns the big screen. Resets on the 1st.", "bannerTitle": "\ud83e\udd83 Fall & Thanksgiving month", "bannerText": "Upload your best fall shot. Leaves, harvest, cozy light, the family table \u2014 or whatever you\u2019re thankful for this year."}, "reviewBlocks": false}};
+function themeKey(){
+  var o = q.get('theme');
+  if (o) return o;
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+}
+var THEME = THEMES[themeKey()] || THEMES['default'];
+var EMO = THEME.emojis || THEMES['default'].emojis;
+function applyTheme(){
+  var b = THEME.board || THEMES['default'].board;
+  document.getElementById('btEye').textContent = b.eyebrow;
+  var h = document.getElementById('btH'); h.textContent = '';
+  (b.heading || []).forEach(function(line, i){
+    if (i) h.appendChild(document.createElement('br'));
+    h.appendChild(document.createTextNode(line));
+  });
+  document.getElementById('btCopy').textContent = b.copy;
+  document.getElementById('spCta').textContent = b.spotCta;
+  var e = document.querySelector('#btArena .bt-empty'); if (e) e.textContent = b.empty;
+}
+applyTheme();
 function heart(){
   var e = document.createElement('span'); e.className='fl';
   e.textContent = EMO[Math.floor(Math.random()*EMO.length)];
@@ -612,7 +638,7 @@ function renderBattle(){
   var es = (battle.entries||[]).slice().sort(function(a,b){return b.votes-a.votes}).slice(0,9);
   var firstDraw = seenBt === null; seenBt = seenBt || {};
   if (!es.length){
-    arena.innerHTML = '<div class="bt-empty">The board is open &mdash; be the first on it</div>';
+    arena.innerHTML = '<div class="bt-empty">' + escT((THEME.board || THEMES['default'].board).empty) + '</div>';
     return;
   }
   arena.innerHTML = '';
