@@ -814,6 +814,30 @@ if (MODE === 'whatnot'){ pollSold(); setInterval(pollSold, 75000); }
    order data) from recent_whatnot.json next to the board. Shown in the ticker
    and the rotating panel when nothing fresh was typed on /sell. */
 var wnRecent = [], wnLastSold = null, wnWinI = 0;
+/* whatnot.json (whatnot_live_refresh.py, Whatnot Seller API, every 2 min):
+   {live, show_url, title, next, sold:[{title, price}], updated}. A copy younger
+   than 15 min wins over config.json whatnot.live / next / title and feeds the
+   sold ticker; older or missing and the board behaves exactly as before. */
+var WNAPI = 'https://api.github.com/repos/impulse-cameras/impulse-tv/contents/whatnot.json?ref=data';
+var WNRAW = 'https://raw.githubusercontent.com/impulse-cameras/impulse-tv/data/whatnot.json';
+var wnFeed = null;
+function wnFeedOk(){ return !!wnFeed && (Date.now()/1000 - (+wnFeed.updated || 0)) < 900; }
+function wnPool(){
+  if (wnFeedOk() && wnFeed.sold && wnFeed.sold.length)
+    return wnFeed.sold.map(function(s){ return {item: s.title, price: '$' + s.price}; });
+  return wnRecent;
+}
+function gotWn(d){ wnFeed = d; renderW(); renderSold(wnLastSold || {}); }
+function pollWn(){
+  fetch(WNAPI, {headers:{'Accept':'application/vnd.github.raw'}})
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    .then(gotWn)
+    .catch(function(){
+      fetch(WNRAW + '?cb=' + Date.now()).then(function(r){return r.json()})
+        .then(gotWn).catch(function(){});
+    });
+}
+if (MODE === 'whatnot'){ pollWn(); setInterval(pollWn, 150000); }
 if (MODE === 'whatnot'){
   fetch('recent_whatnot.json?cb=' + Date.now()).then(function(r){return r.json()})
     .then(function(d){ wnRecent = (d && d.items) || []; renderSold(wnLastSold || {}); })
@@ -823,9 +847,10 @@ if (MODE === 'whatnot'){
     if (!wnSlides.length) return;
     var next = (wnSi + 1) % wnSlides.length;
     if (wnSlides[next].id === 'wnWin'){
-      if (!wnRecent.length){ next = (next + 1) % wnSlides.length; }
+      var pool = wnPool();
+      if (!pool.length){ next = (next + 1) % wnSlides.length; }
       else {
-        var w = wnRecent[wnWinI % wnRecent.length]; wnWinI++;
+        var w = pool[wnWinI % pool.length]; wnWinI++;
         document.getElementById('wnWinV').innerHTML = escT(w.item) + ' &mdash; <b>' + escT(w.price) + '</b>';
       }
     }
@@ -841,9 +866,10 @@ function renderSold(d){
   var cutoff = Date.now()/1000 - 12*3600;
   items = items.filter(function(i){ return i.ts > cutoff; });
   var fallback = false;
-  if (!items.length && wnRecent.length){
+  var pool = wnPool();
+  if (!items.length && pool.length){
     fallback = true;
-    items = wnRecent.map(function(r){ return {item: r.item, price: r.price}; });
+    items = pool.map(function(r){ return {item: r.item, price: r.price}; });
   }
   var bar = document.getElementById('wnTick');
   var section = document.getElementById('whatnot');
@@ -881,9 +907,11 @@ function renderW(){
   var cfg = (config && config.whatnot) || {};
   /* Three states: video-live (simulcast detected), manual-live (cfg.live
      forced true, no video), and soon. */
-  var manualLive = cfg.live === true;
+  var feed = wnFeedOk() ? wnFeed : null;
+  var manualLive = feed ? feed.live === true : cfg.live === true;
   var isLive = wnLive || manualLive;
-  var next = cfg.next ? new Date(cfg.next) : null;
+  var nextIso = feed ? feed.next : cfg.next;
+  var next = nextIso ? new Date(nextIso) : null;
   document.getElementById('wnMain').style.display = wnLive ? 'none' : '';
   document.getElementById('wnVideo').className = wnLive ? 'show' : '';
   document.getElementById('wnBadge').style.display = wnLive ? 'inline-flex' : 'none';
@@ -894,7 +922,7 @@ function renderW(){
     'The auction is <span>happening now</span>' :
     'Auction happening <span>soon</span>';
   document.getElementById('wnSub').textContent =
-    cfg.title || 'Live gear auction — filmed right here in the store';
+    (feed && feed.live && feed.title) || cfg.title || 'Live gear auction — filmed right here in the store';
   var cEl = document.getElementById('wnCount');
   if (!isLive && next && next > new Date()){
     var s = Math.max(0, Math.floor((next - new Date())/1000));
