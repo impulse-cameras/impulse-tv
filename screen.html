@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Impulse Cameras — Screen</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif}
+  #stage{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;overflow:hidden}
+  /* One page per frame, edge to edge. The 6% overscan safe frame lives inside the
+     pages themselves, so nothing here scales or crops them. */
+  .f{position:absolute;top:0;left:0;width:100%;height:100%;border:0;background:#000;visibility:hidden}
+  .f.on{visibility:visible}
+  /* Only ever shown for an unknown ?s= -- plain on purpose, kept inside the safe frame. */
+  #note{display:none;position:absolute;top:6%;left:6%;right:6%;bottom:6%;color:#e6e6e6;
+    font-size:2.2vw;line-height:1.4}
+  #note h1{margin:0 0 .6em;font-size:1.4em;color:#fff}
+  #note p{margin:0 0 .6em}
+  #note ul{margin:0;padding-left:1.2em}
+  @media (max-width:900px){#note{font-size:20px}}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="note"></div>
+<script>
+var CFG = {
+ "screens": {
+  "register-1": {
+   "name": "Register 1",
+   "code": "yxdwvm7z",
+   "scenes": [
+    {
+     "id": "milestone",
+     "src": "board.html?mode=milestone",
+     "secs": 300
+    },
+    {
+     "id": "play",
+     "src": "board.html?mode=play",
+     "secs": 300
+    },
+    {
+     "id": "wall",
+     "src": "board.html?mode=wall",
+     "secs": 300
+    }
+   ],
+   "live": {
+    "id": "whatnot",
+    "src": "board.html?mode=whatnot"
+   }
+  },
+  "register-2": {
+   "name": "Register 2",
+   "code": "b8i9qgb1",
+   "scenes": [
+    {
+     "id": "impulse",
+     "src": "index.html?v=impulse",
+     "secs": 0
+    }
+   ]
+  },
+  "showroom-1": {
+   "name": "Showroom 1 (Sony)",
+   "code": "aezdp1m9",
+   "scenes": [
+    {
+     "id": "sony",
+     "src": "index.html?v=sony",
+     "secs": 0
+    }
+   ]
+  },
+  "showroom-2": {
+   "name": "Showroom 2 (SIGMA)",
+   "code": "5q85wi8k",
+   "scenes": [
+    {
+     "id": "sigma",
+     "src": "index.html?v=sigma",
+     "secs": 0
+    }
+   ]
+  },
+  "showroom-3": {
+   "name": "Showroom 3 (Blackmagic)",
+   "code": "xyinevey",
+   "scenes": [
+    {
+     "id": "blackmagic",
+     "src": "index.html?v=blackmagic",
+     "secs": 0
+    }
+   ]
+  },
+  "showroom-4": {
+   "name": "Showroom 4 (Amaran & Godox)",
+   "code": "18tl39dw",
+   "scenes": [
+    {
+     "id": "lighting",
+     "src": "index.html?v=lighting",
+     "secs": 0
+    }
+   ]
+  },
+  "ember": {
+   "name": "Ember (used gear)",
+   "code": "249qwksx",
+   "scenes": [
+    {
+     "id": "used",
+     "src": "board.html?mode=used",
+     "secs": 0
+    }
+   ]
+  }
+ },
+ "feedApi": "https://api.github.com/repos/impulse-cameras/impulse-tv/contents/whatnot.json?ref=data",
+ "feedRaw": "https://raw.githubusercontent.com/impulse-cameras/impulse-tv/data/whatnot.json",
+ "config": "config.json",
+ "release": "release.json"
+};
+/* screen_router.js -- the per-screen player behind screen.html?s=<slug>.
+   build_screens.py inlines this file into screen.html (one copy, so node can
+   unit-test it: tools/signage/test/test_screen_router.js).
+
+   One URL per showroom TV. The router iframes the existing pages (index.html
+   vendor channels, board.html boards) full-viewport, in sequence, and does the
+   two jobs PosterBooking used to do: launch the right URL per screen and
+   rotate / switch playlists. Register 1 also switches itself to the Whatnot
+   board while a show is live.
+
+   Fire OS 7 / Android 9 WebView: ES5 only (var, function, no arrow functions,
+   no optional chaining or nullish operator, no template literals), none of the
+   newer CSS the playbook lists.
+
+   Nothing here may suppress the referrer (no policy meta tag, no link
+   attribute): the YouTube player inside index.html needs the Pages origin as
+   its referrer or it shows error 153 (playbook: showroom-tv-signage). */
+(function (root) {
+  'use strict';
+
+  /* The feed is whatnot_live_refresh.py's whatnot.json. The board treats a copy
+     younger than 900 s as fresh; the router allows 1200 s because the raw
+     fallback can lag ~5 min behind the contents API. A show that ends flips
+     live to false at once (the refresher pushes any change immediately), so
+     this window only matters if the refresher dies mid-show. */
+  var FEED_FRESH_SECS = 1200;
+  var LOAD_GRACE_SECS = 30;      /* a frame that has not loaded this long after it was due is failed */
+  var RETRY_SECS = 15;
+  var MAX_FAILS = 4;             /* then reload the whole router */
+  var WATCHDOG_SECS = 60;
+  var hasOwn = Object.prototype.hasOwnProperty;
+
+  /* ---------- pure helpers (unit-tested in node) ---------- */
+
+  function parseQuery(search) {
+    var out = {};
+    var s = String(search || '').replace(/^\?/, '');
+    if (!s) return out;
+    var parts = s.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      if (!parts[i]) continue;
+      var eq = parts[i].indexOf('=');
+      var k = eq < 0 ? parts[i] : parts[i].slice(0, eq);
+      var v = eq < 0 ? '' : parts[i].slice(eq + 1);
+      try {
+        k = decodeURIComponent(k.replace(/\+/g, ' '));
+        v = decodeURIComponent(v.replace(/\+/g, ' '));
+      } catch (e) { continue; }
+      if (!hasOwn.call(out, k)) out[k] = v;     /* first wins, like URLSearchParams.get */
+    }
+    return out;
+  }
+
+  function validSlugs(screens) { return Object.keys(screens); }
+
+  /* ?s= takes the slug or the old PosterBooking screen code. */
+  function resolveScreen(screens, key) {
+    var k = String(key || '').replace(/^\s+|\s+$/g, '').toLowerCase();
+    if (!k) return null;
+    var names = validSlugs(screens);
+    for (var i = 0; i < names.length; i++) {
+      var sc = screens[names[i]];
+      if (names[i] === k || String(sc.code || '').toLowerCase() === k)
+        return {slug: names[i], screen: sc};
+    }
+    return null;
+  }
+
+  function num(v, def, min, max) {
+    var n = parseFloat(v);
+    if (isNaN(n)) return def;
+    if (n < min) return min;
+    if (max !== undefined && n > max) return max;
+    return n;
+  }
+
+  /* All URL knobs. Defaults are what the screens run; the rest exist so a
+     person (or a test) can speed a screen up. */
+  function settings(q) {
+    return {
+      t: num(q.t, 0, 0),                      /* seconds per rotating scene; 0 = the screen's own */
+      preload: num(q.preload, 10, 0, 120),    /* seconds before a swap that the next page starts loading */
+      poll: num(q.poll, 120, 1, 3600),        /* Whatnot feed + config poll (Register 1 only) */
+      rel: num(q.rel, 600, 5, 86400),         /* release.json poll */
+      reload: num(q.reload, 180, 0, 100000)   /* minutes between self-reloads; 0 disables */
+    };
+  }
+
+  function feedLive(feed, nowSecs, fresh) {
+    if (!feed || feed.live !== true) return false;
+    return (nowSecs - (+feed.updated || 0)) < (fresh || FEED_FRESH_SECS);
+  }
+
+  /* What should be on screen: the rotation, the live scene, or one pinned scene.
+     override comes from ?scene= (wins) or config.json screens.<slug>.scene. */
+  function wantScene(screen, override, live) {
+    var o = String(override || '').toLowerCase();
+    if (o && o !== 'auto') {
+      if (o === 'boards' || o === 'rotation') return {mode: 'rotation'};
+      if (screen.live && o === screen.live.id) return {mode: 'live', scene: screen.live};
+      for (var i = 0; i < screen.scenes.length; i++)
+        if (screen.scenes[i].id === o) return {mode: 'pin', scene: screen.scenes[i]};
+    }
+    if (screen.live && live) return {mode: 'live', scene: screen.live};
+    return {mode: 'rotation'};
+  }
+
+  function nextIndex(i, n) { return (i + 1) % n; }
+
+  function sceneSecs(scene, st) { return st.t > 0 ? st.t : (scene.secs || 0); }
+
+  /* Cache-buster for a child page: r=<release>. release.json carries a hash of
+     the published pages, so r changes exactly when a page changed. */
+  function withParams(src, r) {
+    return src + (src.indexOf('?') < 0 ? '?' : '&') + 'r=' + encodeURIComponent(r);
+  }
+
+  /* The router's own reload URL: same address, fresh cb=<now>, so the 10-minute
+     GitHub Pages cache cannot hand back an old screen.html. */
+  function reloadUrl(href, now) {
+    var hash = '';
+    var h = href.indexOf('#');
+    if (h >= 0) { hash = href.slice(h); href = href.slice(0, h); }
+    var q = href.indexOf('?');
+    var base = q < 0 ? href : href.slice(0, q);
+    var parts = q < 0 ? [] : href.slice(q + 1).split('&');
+    var keep = [];
+    for (var i = 0; i < parts.length; i++)
+      if (parts[i] && parts[i].split('=')[0] !== 'cb') keep.push(parts[i]);
+    keep.push('cb=' + now);
+    return base + '?' + keep.join('&') + hash;
+  }
+
+  var api = {
+    parseQuery: parseQuery, validSlugs: validSlugs, resolveScreen: resolveScreen,
+    settings: settings, feedLive: feedLive, wantScene: wantScene, nextIndex: nextIndex,
+    sceneSecs: sceneSecs, withParams: withParams, reloadUrl: reloadUrl,
+    FEED_FRESH_SECS: FEED_FRESH_SECS
+  };
+
+  /* ---------- browser driver ---------- */
+
+  function getJSON(url, headers, cb) {
+    var x = new XMLHttpRequest();
+    var done = false;
+    function fin(err, d) { if (!done) { done = true; cb(err, d); } }
+    x.open('GET', url, true);
+    x.timeout = 8000;
+    for (var h in headers) if (hasOwn.call(headers, h)) x.setRequestHeader(h, headers[h]);
+    x.onload = function () {
+      if (x.status < 200 || x.status > 299) return fin('http ' + x.status);
+      try { fin(null, JSON.parse(x.responseText)); } catch (e) { fin('json'); }
+    };
+    x.onerror = function () { fin('net'); };
+    x.ontimeout = function () { fin('net'); };
+    x.send();
+  }
+
+  function showUnknown(doc, screens, asked) {
+    var box = doc.getElementById('note');
+    function line(tag, text) {
+      var el = doc.createElement(tag);
+      el.textContent = text;           /* textContent, never innerHTML: the slug comes from the URL */
+      box.appendChild(el);
+      return el;
+    }
+    line('h1', 'Unknown screen');
+    line('p', asked ? '"' + asked + '" is not one of our screens.' : 'No screen was chosen in the address.');
+    line('p', 'Use screen.html?s= followed by one of:');
+    var ul = box.appendChild(doc.createElement('ul'));
+    var names = validSlugs(screens);
+    for (var i = 0; i < names.length; i++) {
+      var li = doc.createElement('li');
+      li.textContent = names[i] + ' - ' + screens[names[i]].name;
+      ul.appendChild(li);
+    }
+    box.style.display = 'block';
+  }
+
+  function start(cfg) {
+    var win = root, doc = root.document, loc = root.location;
+    var q = parseQuery(loc.search);
+    var st = settings(q);
+    var hit = resolveScreen(cfg.screens, q.s);
+    if (!hit) { showUnknown(doc, cfg.screens, q.s); return; }
+
+    var slug = hit.slug, screen = hit.screen, scenes = screen.scenes;
+    var stage = doc.getElementById('stage');
+    var release = null;               /* hash from release.json, once read */
+    var seq = 0;                      /* bumped on every scene change; stale callbacks check it */
+    var timers = [];
+    var cur = null, curIdx = 0, curMode = null, curKey = null, pending = null;
+    var fails = 0, bad = 0, begun = false;
+    var liveNow = false, missed = 0, cfgScene = '';
+    var urlScene = q.scene || '';
+
+    function now() { return new Date().getTime(); }
+    function log() {
+      try { win.console.log.apply(win.console, ['[screen ' + slug + ']'].concat([].slice.call(arguments))); } catch (e) {}
+    }
+    function later(fn, ms) { var id = setTimeout(fn, ms); timers.push(id); return id; }
+    function clearAll() { for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]); timers = []; }
+
+    function reloadRouter(why) {
+      log('reload router:', why);
+      loc.replace(reloadUrl(loc.href, now()));
+    }
+
+    /* ---- frames ---- */
+    function mount(scene) {
+      var el = doc.createElement('iframe');
+      var f = {el: el, scene: scene, loaded: false, born: now()};
+      el.className = 'f';
+      el.setAttribute('allow', 'autoplay; encrypted-media');
+      el.setAttribute('scrolling', 'no');
+      el.setAttribute('title', scene.id);
+      el.onload = function () { f.loaded = true; };
+      el.src = withParams(scene.src, release || ('t' + now()));
+      stage.appendChild(el);
+      return f;
+    }
+    function dispose(f) {
+      if (!f || !f.el.parentNode) return;
+      f.el.onload = null;
+      f.el.src = 'about:blank';
+      f.el.parentNode.removeChild(f.el);
+    }
+    /* Same-origin pages are readable; Chrome's error page ("webpage not
+       available") is not, which is how a failed load shows up here. */
+    function healthy(f) {
+      try {
+        var d = f.el.contentDocument;
+        return !!(d && d.body && String(d.location.href).indexOf('http') === 0);
+      } catch (e) { return false; }
+    }
+    function awaitFrame(f, notBefore, token, ok, fail) {
+      (function poll() {
+        if (token !== seq) { dispose(f); return; }
+        var t = now();
+        if (f.loaded && !healthy(f)) { dispose(f); fail('page did not open'); return; }
+        if (f.loaded && t >= notBefore) { ok(); return; }
+        if (!f.loaded && t > Math.max(notBefore, f.born) + LOAD_GRACE_SECS * 1000) {
+          dispose(f); fail('load timed out'); return;
+        }
+        setTimeout(poll, 250);       /* untracked: the token check above retires it */
+      })();
+    }
+    function reveal(f) {
+      f.el.className = 'f on';
+      var old = cur;
+      cur = f;
+      if (pending === f) pending = null;
+      fails = 0;
+      bad = 0;
+      if (old) setTimeout(function () { dispose(old); }, 500);   /* new one is already covering it */
+    }
+
+    /* ---- scene changes ---- */
+    function show(i, f, mode, token) {
+      clearAll();                       /* the timer that led here has fired; keep the list short */
+      reveal(f);
+      curIdx = i;
+      curMode = mode;
+      var secs = sceneSecs(f.scene, st);
+      log('showing', f.scene.id, mode === 'rotation' && secs > 0 ? 'for ' + secs + 's' : '(held)');
+      if (mode !== 'rotation' || !(secs > 0) || scenes.length < 2) return;
+      var due = now() + secs * 1000;
+      var ni = nextIndex(i, scenes.length);
+      var pre = Math.min(st.preload, secs / 2) * 1000;
+      later(function () { prepare(ni, due, token); }, Math.max(0, secs * 1000 - pre));
+    }
+    /* Load the next page hidden, show it when it has loaded AND its time is up,
+       then drop the old one (one page alive at a time keeps a stick's memory
+       and the GitHub API budget down). */
+    function prepare(ni, due, token) {
+      var f = mount(scenes[ni]);
+      pending = f;
+      awaitFrame(f, due, token, function () { show(ni, f, 'rotation', token); }, function (why) {
+        pending = null;
+        fails++;
+        log('next page failed:', why, '(' + fails + ')');
+        if (fails >= MAX_FAILS) { reloadRouter('next page keeps failing'); return; }
+        later(function () { prepare(ni, now(), token); }, RETRY_SECS * 1000);
+      });
+    }
+    function go(mode, scene, idx) {
+      seq++;
+      var token = seq;
+      clearAll();
+      if (pending) { dispose(pending); pending = null; }
+      var f = mount(scene);
+      pending = f;
+      awaitFrame(f, 0, token, function () { show(idx, f, mode, token); }, function (why) {
+        pending = null;
+        fails++;
+        log('page failed:', why, '(' + fails + ')');
+        if (fails >= MAX_FAILS) { reloadRouter('page keeps failing'); return; }
+        later(function () { go(mode, scene, idx); }, RETRY_SECS * 1000);
+      });
+    }
+    function evaluate() {
+      var w = wantScene(screen, urlScene || cfgScene, liveNow);
+      var key = w.mode === 'rotation' ? 'rotation' : w.mode + ':' + w.scene.id;
+      if (key === curKey) return;
+      curKey = key;
+      log('scene ->', key);
+      if (w.mode === 'rotation') go('rotation', scenes[0], 0);
+      else go(w.mode, w.scene, -1);
+    }
+
+    /* ---- Register 1: live signal + remote override ---- */
+    function getFeed(cb) {
+      getJSON(cfg.feedApi, {Accept: 'application/vnd.github.raw'}, function (err, d) {
+        if (!err) return cb(d);
+        getJSON(cfg.feedRaw + '?cb=' + now(), {}, function (err2, d2) { cb(err2 ? null : d2); });
+      });
+    }
+    function pollLive(after) {
+      getFeed(function (feed) {
+        if (feed) {                     /* no answer at all = hold the current state */
+          if (feedLive(feed, now() / 1000)) { liveNow = true; missed = 0; }
+          else if (liveNow) { missed++; if (missed >= 2) { liveNow = false; missed = 0; } }
+        }
+        getJSON(cfg.config + '?cb=' + now(), {}, function (err, c) {
+          if (!err && c) cfgScene = (c.screens && c.screens[slug] && c.screens[slug].scene) || '';
+          after();
+        });
+      });
+    }
+
+    /* ---- release.json: the cache-buster ---- */
+    function pollRelease(after) {
+      getJSON(cfg.release + '?cb=' + now(), {}, function (err, d) {
+        if (!err && d && d.r) {
+          var r = String(d.r);
+          if (release === null) release = r;
+          else if (r !== release) { reloadRouter('release ' + release + ' -> ' + r); return; }
+        }
+        if (after) after();
+      });
+    }
+
+    /* ---- boot: read release (and the feed, on Register 1) first, so the
+       first page is the right one and carries the release stamp ---- */
+    var waiting = screen.live ? 2 : 1;
+    function begin() {
+      if (begun) return;
+      begun = true;
+      evaluate();
+    }
+    function oneDone() { waiting--; if (waiting <= 0) begin(); }
+    pollRelease(oneDone);
+    if (screen.live) pollLive(oneDone);
+    setTimeout(begin, 5000);            /* do not wait longer than this for either */
+
+    setInterval(function () { pollRelease(null); }, st.rel * 1000);
+    if (screen.live) setInterval(function () { pollLive(function () { if (begun) evaluate(); }); }, st.poll * 1000);
+
+    /* ---- watchdog + hygiene reload (same pair the other pages carry) ---- */
+    setInterval(function () {
+      if (!cur) { reloadRouter('nothing on screen after ' + WATCHDOG_SECS + 's'); return; }
+      if (healthy(cur)) { bad = 0; return; }
+      bad++;
+      if (bad >= 2) { reloadRouter('page went away'); return; }
+      log('page went away, reopening');
+      go(curMode, cur.scene, curIdx);
+    }, WATCHDOG_SECS * 1000);
+    if (st.reload > 0) setTimeout(function () { reloadRouter('scheduled'); }, st.reload * 60000);
+
+    win.__screen = {slug: slug, settings: st, state: function () {
+      return {key: curKey, mode: curMode, scene: cur ? cur.scene.id : null, liveNow: liveNow, release: release, cfgScene: cfgScene};
+    }};
+  }
+
+  api.start = start;
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.ImpulseScreen = api;
+})(typeof window !== 'undefined' ? window : this);
+
+ImpulseScreen.start(CFG);
+</script>
+</body>
+</html>
