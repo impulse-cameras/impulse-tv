@@ -209,7 +209,13 @@ var CFG = {
       preload: num(q.preload, 10, 0, 120),    /* seconds before a swap that the next page starts loading */
       poll: num(q.poll, 120, 1, 3600),        /* Whatnot feed + config poll (Register 1 only) */
       rel: num(q.rel, 600, 5, 86400),         /* release.json poll */
-      reload: num(q.reload, 180, 0, 100000)   /* minutes between self-reloads; 0 disables */
+      /* minutes between self-reloads; 0 disables. A fullscreen (fs=1) screen never reloads
+         on a timer: a reload leaves fullscreen and the next tap would be needed. */
+      reload: num(q.reload, q.fs === '1' ? 0 : 180, 0, 100000),
+      /* fs=1: for the built-in Silk browser (Fully shows YouTube video as a white box on
+         Fire OS 8). Silk's toolbar only goes away in fullscreen, and fullscreen needs one
+         tap or OK press, so a see-through layer takes that press and then removes itself. */
+      fs: q.fs === '1'
     };
   }
 
@@ -455,13 +461,44 @@ var CFG = {
       });
     }
 
+    /* ---- fs=1: ask for fullscreen on the first tap / OK press ---- */
+    function armFullscreen() {
+      var el = doc.documentElement;
+      var req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!req) return;
+      var veil = doc.createElement('div');
+      veil.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:transparent';
+      function enter(ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        try {
+          var p = req.call(el);
+          if (p && p.catch) p.catch(function () {});
+        } catch (e) {}
+      }
+      function sync() {
+        var full = !!(doc.fullscreenElement || doc.webkitFullscreenElement);
+        if (full && veil.parentNode) veil.parentNode.removeChild(veil);
+        if (!full && !veil.parentNode) doc.body.appendChild(veil);
+      }
+      veil.addEventListener('click', enter);
+      doc.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.keyCode === 13) enter(ev); });
+      doc.addEventListener('fullscreenchange', sync);
+      doc.addEventListener('webkitfullscreenchange', sync);
+      sync();
+    }
+    if (st.fs) armFullscreen();
+
     /* ---- release.json: the cache-buster ---- */
     function pollRelease(after) {
       getJSON(cfg.release + '?cb=' + now(), {}, function (err, d) {
         if (!err && d && d.r) {
           var r = String(d.r);
           if (release === null) release = r;
-          else if (r !== release) { reloadRouter('release ' + release + ' -> ' + r); return; }
+          else if (r !== release) {
+            if (st.fs) {                  /* soft refresh: reloading would drop fullscreen */
+              release = r; curKey = null; evaluate();
+            } else { reloadRouter('release ' + release + ' -> ' + r); return; }
+          }
         }
         if (after) after();
       });
