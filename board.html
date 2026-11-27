@@ -1393,9 +1393,14 @@ function renderC(){
       for (var w = 0; w < wanted.length; w++) take(wanted[w]);
       if (out.length) return out;
     }
-    var leads = LEADS[screen] || [];
-    for (var l = 0; l < leads.length; l++) take(leads[l]);
-    for (var p = 0; p < pool.length; p++) if (!used[p]) out.push(pool[p]);
+    /* Each Showroom starts at its own brand and then walks the SAME feed order round the circle from there, so the four
+       screens are always on four different brands at any moment (a lead-then-shared-order list put all four on the same
+       brand from the third step on). A screen with no lead that has sale items starts a quarter of the way round per screen. */
+    var leads = LEADS[screen] || [], start = -1;
+    for (var l = 0; l < leads.length && start < 0; l++)
+      for (var j = 0; j < pool.length; j++) if (matches(pool[j], leads[l])) { start = j; break; }
+    if (start < 0) start = pool.length ? ((Math.max(1, screen | 0) - 1) * Math.floor(pool.length / 4)) % pool.length : 0;
+    out = pool.slice(start).concat(pool.slice(0, start));
     return out;
   }
 
