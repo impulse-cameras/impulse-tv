@@ -573,6 +573,23 @@ html.still .u-price .save::after{display:none}
   .s-stage,.s-chips .rail,.s-chip,.i-mstage,.i-gbar .fill{transition:none}
 }
 
+/* Ember's Black Friday look (?mode=used&bf=1, Desk t11030). tv_bf_boards.js puts .bf on #used only inside the offer's dates; without it
+   everything below is hidden and the normal used board is unchanged. The header reuses the Showroom boards' title block (.s-title)
+   and the same teal chip; no new colour. The chip is the shop's own words from bf_used.json, never a computed price. */
+#used:not(.bf) .u-bf-head{display:none}
+.u-bf-offer{display:none;flex-direction:column;align-items:flex-start;gap:.3em;margin-top:.45em}
+#used.bf .u-bf-offer.on{display:flex}
+.u-bf-offer b{background:var(--accent);color:var(--on-accent);font-family:var(--font-display);font-weight:800;font-size:var(--t-body);
+  padding:.3em .9em;border-radius:var(--radius-pill);white-space:nowrap}
+.u-bf-offer span{font-size:var(--t-body);line-height:1.25;color:var(--text)}
+#used.bf .u-buy{border:2px solid var(--accent)}
+/* The right-hand column is exactly full for the longest titles on the normal board, so the chip must not push the buy QR out of the safe
+   frame. tv_bf_boards.js bfUsedFit() measures and sheds in this order: the chip's caption moves beside the chip (.tight), then the title
+   is cut to 3 lines, then 2 (--ul). A short title never triggers any of it. */
+#used.bf .u-title{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--ul,none)}
+#used.bf.tight .u-bf-offer{flex-direction:row;align-items:center;gap:.8em;margin-top:.3em}
+#used.bf.tight .u-bf-offer span{font-size:var(--t-caption);line-height:1.25}
+
 </style>
 </head>
 <body>
@@ -660,6 +677,7 @@ html.still .u-price .save::after{display:none}
 
 <section class="scene shift" id="used">
   <div class="brand" role="img" aria-label="Impulse Cameras"></div>
+  <div class="s-title u-bf-head"><div class="eyebrow" id="uBfEye"></div><div class="big" id="uBfBig"></div></div>
   <div class="u-count"><div class="n" id="uCount"></div><div class="t">used pieces in stock</div></div>
   <div class="u-stage" id="uStage">
     <div class="fr" id="uFr"><div class="pw"><img class="ph" id="uPh" alt=""></div></div>
@@ -674,7 +692,8 @@ html.still .u-price .save::after{display:none}
       <div class="u-top"><span class="eyebrow" id="uVendor"></span><span id="uGrade"></span></div>
       <div class="u-title" id="uName"></div>
     </div>
-    <div class="u-price"><div class="was" id="uWas"></div><div class="now" id="uNow"></div><div class="save" id="uSave"></div></div>
+    <div class="u-price"><div class="was" id="uWas"></div><div class="now" id="uNow"></div><div class="save" id="uSave"></div>
+      <div class="u-bf-offer" id="uBfOffer"><b id="uBfChip"></b><span id="uBfHow"></span></div></div>
     <div class="u-buy">
       <div class="q qr-tile halo" id="uQr"></div>
       <div><div class="big">Scan to buy<br>this one</div><div class="sm" id="uHandle">impulsecameras.com</div></div>
@@ -737,6 +756,7 @@ html.still .u-price .save::after{display:none}
   <div class="s-foot"><div class="s-how i-foot" id="iFoot"></div></div>
 </section>
 <!-- ids and classes the script reads or writes (keep them): boot wifi milestone play whatnot used wall weekBox week odo goalTxt fill left toast
+     uBfEye uBfBig uBfOffer uBfChip uBfHow; .u-bf-head .u-bf-offer (Ember's Black Friday look, ?mode=used&bf=1)
      sale sCount sChips sRail sStage sCards sEmpty sPos instore iClock iOnly iOnlyH iRules iFine iShelf iShelfN iMEye iMStage iMPh iMShelf iMName iMWas iMNow
      iMSave iMQr iMEmpty iGEye iGHead iGPrize iGCdWrap iGCd iGCdCap iGBar iGFill iGNext iStrip iFoot; .s-chip .on .s-card .s-ph .s-shelf .s-pr .s-qr
      confetti bCount floats btEye btH btCopy btReset btChamp btArena spot spName spMeta spShot spCta spFr spPh wnMain wnPill wnPillTxt wnHead wnSub
@@ -1283,7 +1303,7 @@ function showUsed(){
   var empty = document.getElementById('uEmpty');
   /* t6253: with nothing in stock the stage takes the whole frame instead of leaving a half-dead right column */
   document.getElementById('used').classList.toggle('is-empty', !(used && used.length));
-  if (!used || !used.length){ empty.style.display = 'flex'; return; }
+  if (!used || !used.length){ empty.style.display = 'flex'; if (USED_BF) bfUsedShow(null); return; }
   empty.style.display = 'none';
   var it = used[uIdx];
   var uph = document.getElementById('uPh'), ufr = document.getElementById('uFr');
@@ -1301,6 +1321,7 @@ function showUsed(){
   } else { was.textContent = ''; save.textContent = ''; }
   document.getElementById('uQr').innerHTML = it.qr || '';
   document.getElementById('uHandle').textContent = 'impulsecameras.com/products/' + it.handle;
+  if (USED_BF) bfUsedShow(it);                  /* Black Friday look (?mode=used&bf=1): header and extra-10% chip, see tv_bf_boards.js */
 }
 function nextUsed(){
   if (!used || used.length < 2) return;
@@ -1346,7 +1367,7 @@ function renderC(){
       l.replace(/(@[\w.]+|#[\w]+)/g, '<span class="tl">$1</span>'); }).join('');
 }
 
-/* ---------- Black Friday 2026: mode=sale (Showrooms) and mode=instore (Register 2) ---------- */
+/* ---------- Black Friday 2026: mode=sale (Showrooms), mode=instore (Register 2), mode=used&bf=1 (Ember) ---------- */
 /* tv_bf.js -- the pure helpers behind the Black Friday boards (board.html?mode=sale and ?mode=instore).
    build_boards.py inlines this file into board.html (one copy, so node can unit-test it:
    tools/signage/test/test_bf_board.js). Nothing here touches the page.
@@ -1501,9 +1522,26 @@ function renderC(){
     return !!u && (nowMs / 1000 - u) < (maxHours || 6) * 3600;
   }
 
+  /* ---- Ember's used-gear look (?mode=used&bf=1); offer = tools/signage/bf_used.json ---- */
+  /* True from offer.start up to (not including) offer.end. A bad or missing date never turns the look on. */
+  function inWindow(offer, nowMs) {
+    var st = Date.parse(offer && offer.start), en = Date.parse(offer && offer.end);
+    if (isNaN(st) || isNaN(en) || en <= st) return false;
+    return nowMs >= st && nowMs < en;
+  }
+
+  /* Does this used-gear row get the extra 10%? The discount is on the Used Gear collection (tags Used / preowned /
+     Pre-Owned), which used_gear_refresh.py reports per row as in_used. A feed from before that field existed carries no
+     flag: then only a row marked gear "Used" counts, and an Open Box row is never assumed to be in the collection. */
+  function usedOffer(it) {
+    if (!it) return false;
+    if (it.in_used === true || it.in_used === false) return it.in_used;
+    return it.gear === 'Used';
+  }
+
   var api = {LEADS: LEADS, matches: matches, brandOrder: brandOrder, pages: pages, money: money, save: save,
              qrSvg: qrSvg, parseNow: parseNow, giveawayState: giveawayState, countdown: countdown,
-             feedFresh: feedFresh};
+             feedFresh: feedFresh, inWindow: inWindow, usedOffer: usedOffer};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BF = api;
 })(typeof window !== 'undefined' ? window : this);
@@ -1517,6 +1555,8 @@ function renderC(){
      ?mode=instore            Register 2: in-store only, Impulse merch, hourly giveaway progress  (bf2.json)
          &now=2026-11-27T15:20:00-06:00   fake the clock to rehearse the giveaway states
      both: &feed=./           read the feeds from this relative folder (tests) instead of the data branch
+     ?mode=used&bf=1          Ember: the used-gear board in its Black Friday look (used.json, the board's own feed). Inside the
+                              offer's dates only (bf_used.json); &now=... fakes the clock here too. Without &bf=1 none of this runs.
 
    The feeds come from tools/signage/bf_sale_refresh.py (Shopify, read-only, cron). The raw copy is read FIRST: it can lag
    ~5 minutes, which is nothing for a 15-minute feed, and it keeps these five screens off the 60 requests/hour/IP the
@@ -1797,6 +1837,43 @@ if (MODE === 'instore'){
   bfMTimer = setInterval(bfMerchStep, 7000);
   bfGet('bf2.json', gotBf2);
   setInterval(function(){ bfGet('bf2.json', gotBf2); }, 300000);
+}
+
+/* ---------- Ember: the used-gear board in its Black Friday look (?mode=used&bf=1) ---------- */
+/* BF_USED is tools/signage/bf_used.json embedded at build time: what the live Black Friday page says about used gear, and the
+   dates it runs. The look exists only inside those dates (a stick left on this address after Nov 30 shows the normal used
+   board again, never an expired offer). The extra-10% chip is drawn only on a row the discount covers (BF.usedOffer). The
+   used board's own code (build_boards.py) calls bfUsedShow() for the row on screen; without &bf=1 nothing below runs. */
+var BF_USED = {"tz": "America/Chicago", "start": "2026-11-27T00:00:00-06:00", "end": "2026-12-01T00:00:00-06:00", "headline": "Extra 10% off all used gear", "dates": "Nov 27 to Nov 30", "chip": "Extra 10% off", "how": "Taken off automatically in your cart"};
+var USED_BF = MODE === 'used' && q.get('bf') === '1';
+var bfUsedRow = null;
+/* The right-hand column must never run past the safe frame. It is exactly full on the normal board for the longest titles, so the chip
+   needs room made: first its caption moves beside it (.tight), then the title is cut to 3 lines, then 2. Nothing happens when it fits. */
+function bfUsedFit(on){
+  var box = bfEl('used'), info = box.querySelector('.u-info'), name = bfEl('uName');
+  box.classList.remove('tight');
+  name.style.removeProperty('--ul');
+  if (!on) return;
+  function over(){ return info.scrollHeight > info.clientHeight + 1; }
+  if (!over()) return;
+  box.classList.add('tight');
+  for (var n = 3; n >= 2 && over(); n--) name.style.setProperty('--ul', n);
+}
+function bfUsedLook(){
+  var on = BF.inWindow(BF_USED, bfNow());
+  if (bfEl('used').classList.contains('bf') !== on) bfEl('used').classList.toggle('bf', on);
+  bfText(bfEl('uBfEye'), 'Black Friday \u00b7 ' + BF_USED.dates);
+  bfText(bfEl('uBfBig'), BF_USED.headline);
+  bfText(bfEl('uBfChip'), BF_USED.chip);
+  bfText(bfEl('uBfHow'), BF_USED.how);
+  bfEl('uBfOffer').classList.toggle('on', on && BF.usedOffer(bfUsedRow));
+  bfUsedFit(on);
+}
+function bfUsedShow(it){ bfUsedRow = it; bfUsedLook(); }        /* it = the row on screen, null for the empty state */
+if (USED_BF){
+  bfUsedLook();
+  setInterval(bfUsedLook, 60000);                               /* the window can open or close while the screen runs */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(bfUsedLook);   /* the display font changes every line's height */
 }
 
 })();
