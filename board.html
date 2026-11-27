@@ -464,6 +464,115 @@ html.still .u-price .save::after{display:none}
   .c-tick .in,.wn-tick .in{animation-duration:90s}
 }
 
+/* ---------- Black Friday 2026: Showroom sale board (?mode=sale) and Register 2 (?mode=instore) ----------
+   Same frame as the other boards (logo top-left, a number top-right, Wi-Fi tile bottom-left). Everything read or scanned stays
+   inside the 6% safe frame (--sx / --sy); the stage ends above the Wi-Fi tile and the footer line sits to its right. */
+.s-title{position:absolute;left:calc(var(--sx) + 18.6em);top:var(--sy);height:3.6em;display:flex;flex-direction:column;
+  justify-content:center;gap:.15em;z-index:5}
+.s-title .big{font-family:var(--font-display);font-size:var(--t-lead);font-weight:800;line-height:1.15;color:var(--text-strong)}
+.s-count{position:absolute;top:var(--sy);right:var(--sx);text-align:right;z-index:5}
+.s-count .n{font-family:var(--font-display);font-size:var(--t-title);font-weight:800;line-height:1;color:var(--text-strong);
+  font-variant-numeric:tabular-nums}
+.s-count .t{font-size:var(--t-caption);color:var(--text-quiet);letter-spacing:.12em;text-transform:uppercase;margin-top:.5em;font-weight:600}
+/* brand chips: the filter row. The active brand is filled; the rail slides so the active chip stays in view */
+.s-chips{position:absolute;left:var(--sx);right:var(--sx);top:8.4em;height:3.5em;overflow:hidden;z-index:5}
+.s-chips .rail{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;gap:.6em;white-space:nowrap;
+  transition:transform .6s var(--ease)}
+.s-chip{flex:none;height:2.9em;display:flex;align-items:center;gap:.55em;padding:0 1.15em;border-radius:var(--radius-pill);
+  background:var(--surface-raised);border:2px solid var(--line-quiet);color:var(--text);font-family:var(--font-display);
+  font-weight:700;font-size:var(--t-body);transition:background .3s ease,color .3s ease}
+.s-chips.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 94%,transparent);mask-image:linear-gradient(90deg,#000 94%,transparent)}
+.s-chips.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%);mask-image:linear-gradient(90deg,transparent,#000 6%)}
+.s-chips.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.s-chip small{font-family:var(--font-body);font-size:var(--t-caption);font-weight:600;color:var(--text-quiet)}
+.s-chip.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.s-chip.on small{color:var(--on-accent)}
+.s-stage{position:absolute;left:var(--sx);right:var(--sx);top:12.6em;bottom:10.6em;z-index:4;transition:opacity .45s ease}
+.s-stage.out{opacity:0}
+.s-cards{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;justify-content:center;gap:var(--gap)}
+.s-card{flex:0 0 calc((100% - 2 * var(--gap)) / 3);min-width:0;display:flex;flex-direction:column;background:var(--surface-raised);
+  border:1px solid var(--line-quiet);border-radius:var(--radius-card);overflow:hidden}
+.s-ph{position:relative;flex:none;height:11.6em;background:var(--tile)}
+.s-ph img{position:absolute;left:.6em;top:.6em;width:calc(100% - 1.2em);height:calc(100% - 1.2em);object-fit:contain}
+.s-shelf{position:absolute;left:.6em;top:.6em;z-index:2;background:var(--band);color:var(--text-strong);border-radius:var(--radius-pill);
+  padding:.2em .8em;font-family:var(--font-display);font-size:var(--t-caption);font-weight:700;letter-spacing:.04em}
+.s-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:.45em;padding:.7em .9em .8em}
+.s-eye{font-family:var(--font-display);font-size:var(--t-caption);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-name{font-size:var(--t-body);font-weight:600;line-height:1.22;color:var(--text-strong);display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.s-buy{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:.8em}
+.s-pr{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:.15em}
+.s-pr .was{font-size:var(--t-body);color:var(--text-quiet);text-decoration:line-through;font-variant-numeric:tabular-nums;white-space:nowrap}
+.s-pr .was b{font-weight:600;text-decoration:none;display:inline-block;margin-left:.6em;color:var(--text)}
+.s-pr .now{font-family:var(--font-display);font-size:var(--t-heading);font-weight:800;line-height:1.1;color:var(--text-strong);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.s-pr .save{position:relative;overflow:hidden;background:var(--alert);color:var(--alert-surface);font-family:var(--font-display);
+  font-weight:800;font-size:var(--t-body);padding:.25em .8em;border-radius:var(--radius-pill);margin-top:.3em;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.s-pr .was:empty,.s-pr .save:empty{display:none}
+.s-qr{width:9em;height:9em;flex:none}
+.s-empty{position:absolute;left:var(--sx);right:var(--sx);top:12.6em;bottom:10.6em;z-index:4;display:flex;align-items:center;
+  justify-content:center;text-align:center;padding:2em;color:var(--text-strong);font-family:var(--font-display);font-weight:800;
+  font-size:var(--t-title);line-height:1.2;text-wrap:balance;background:var(--surface-raised);border-radius:var(--radius-sheet)}
+.s-foot{position:absolute;left:calc(var(--sx) + 25em);right:var(--sx);bottom:var(--sy);height:6.6em;z-index:5;display:flex;
+  align-items:center;justify-content:space-between;gap:2em}
+.s-how{font-size:var(--t-body);color:var(--text);line-height:1.3;max-width:34em}
+.s-how b{color:var(--text-strong)}
+.s-how.i-foot{font-size:var(--t-caption);max-width:none;color:var(--text-quiet);line-height:1.35}
+.s-pos{font-family:var(--font-display);font-size:var(--t-body);font-weight:700;color:var(--text-strong);white-space:nowrap}
+.s-pos small{font-family:var(--font-body);font-weight:600;color:var(--text-quiet);font-size:var(--t-caption);margin-left:.6em}
+#sale.is-empty .s-chips,#sale.is-empty .s-stage,#sale.is-empty .s-foot,#sale.is-empty .s-count{display:none}
+
+/* Register 2: three panels. (a) in store only, (b) Impulse merch, (c) the hourly giveaway */
+.i-grid{position:absolute;left:var(--sx);right:var(--sx);top:9.8em;bottom:10.6em;z-index:4;display:flex;gap:var(--gap)}
+.i-card{min-width:0;min-height:0;display:flex;flex-direction:column;gap:.55em;background:var(--surface-raised);
+  border:1px solid var(--line-quiet);border-radius:var(--radius-card);padding:.9em 1em}
+.i-only{flex:0 0 21em}
+.i-merch{flex:0 0 21.6em;padding:0;gap:0;overflow:hidden}
+.i-merch .eyebrow{padding:.9em 1em .55em}
+.i-give{flex:1 1 0;border:2px solid var(--accent)}
+.i-h{font-family:var(--font-display);font-size:var(--t-heading);font-weight:800;line-height:1.12;color:var(--text-strong)}
+.i-rules{list-style:none;padding:0;display:flex;flex-direction:column;gap:.7em;margin-top:.3em}
+.i-rules li{position:relative;padding-left:1.3em;font-size:var(--t-lead);line-height:1.2;color:var(--text-strong);font-weight:500}
+.i-rules li::before{content:'';position:absolute;left:0;top:.42em;width:.55em;height:.55em;border-radius:50%;background:var(--accent)}
+.i-only.over .i-rules,.i-only.over .i-fine{display:none}
+.i-fine{font-size:var(--t-caption);color:var(--text-quiet);line-height:1.35}
+.i-shelf{margin-top:auto;display:flex;align-items:center;gap:.7em;padding-top:.7em;border-top:1px solid var(--line-quiet);
+  font-size:var(--t-body);line-height:1.2;color:var(--text)}
+.i-shelf .num{font-family:var(--font-display);font-size:var(--t-heading);font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.i-shelf.off{display:none}
+.i-mstage{flex:1;min-height:0;display:flex;flex-direction:column;transition:opacity .4s ease}
+.i-mstage.out{opacity:0}
+.i-merch .s-ph{height:auto;flex:1 1 0;min-height:9em}
+.i-mname{padding:.6em 1em .1em;font-size:var(--t-body);font-weight:600;line-height:1.22;color:var(--text-strong);display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.i-merch .s-buy{padding:.2em 1em 1em}
+.i-merch .s-qr{width:8.2em;height:8.2em}
+.i-mempty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:1em;font-family:var(--font-display);
+  font-weight:800;font-size:var(--t-lead);line-height:1.2;color:var(--text-strong)}
+.i-ghead{font-family:var(--font-display);font-size:var(--t-title);font-weight:800;line-height:1.1;letter-spacing:-.015em;color:var(--text-strong)}
+.i-gprize{font-family:var(--font-display);font-size:var(--t-heading);font-weight:800;line-height:1.15;color:var(--accent);text-wrap:balance;min-height:2.3em}
+.i-gcd{display:flex;align-items:baseline;gap:.6em;margin-top:.1em;flex-wrap:wrap}
+.i-gcd .n{font-family:var(--font-display);font-size:5.4em;font-weight:800;line-height:1.05;color:var(--text-strong);
+  font-variant-numeric:tabular-nums}
+.i-gcd small{font-size:var(--t-body);color:var(--text-quiet);font-weight:600}
+.i-gbar{height:.8em;background:var(--surface);border:1px solid var(--line-quiet);border-radius:var(--radius-pill);overflow:hidden}
+.i-gbar .fill{height:100%;width:0;background:var(--accent);border-radius:var(--radius-pill);transition:width 1s linear}
+.i-gnext{font-size:var(--t-body);color:var(--text);line-height:1.25}
+.i-gnext b{color:var(--text-strong)}
+.i-strip{margin-top:auto;display:flex;flex-wrap:wrap;gap:.5em}
+.i-pill{flex:0 0 calc((100% - 4 * .5em) / 5);min-width:0;height:2.6em;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-pill);
+  border:2px solid var(--line-quiet);font-family:var(--font-display);font-weight:700;font-size:var(--t-caption);color:var(--text-quiet);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.i-pill.done{background:var(--surface);color:var(--text-quiet);border-color:var(--line-quiet)}
+.i-pill.done::after{content:'\2713';margin-left:.3em;color:var(--accent)}
+.i-pill.live{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.i-pill.next{border-color:var(--accent);color:var(--text-strong)}
+@media (prefers-reduced-motion: reduce){
+  .s-stage,.s-chips .rail,.s-chip,.i-mstage,.i-gbar .fill{transition:none}
+}
+
 </style>
 </head>
 <body>
@@ -579,7 +688,57 @@ html.still .u-price .save::after{display:none}
   <div class="c-grid" id="grid"></div>
   <div class="c-tick" data-clip-ok="a ticker crawl: every line scrolls across in full, then repeats"><div class="in" id="tickin"></div></div>
 </section>
+<!-- Black Friday 2026: Showroom 1-4 (?mode=sale&screen=1..4) and Register 2 (?mode=instore). Data: sale.json / bf2.json from
+     bf_sale_refresh.py; helpers in tv_bf.js, page code in tv_bf_boards.js. -->
+<section class="scene shift" id="sale">
+  <div class="brand" role="img" aria-label="Impulse Cameras"></div>
+  <div class="s-title"><div class="eyebrow">Black Friday &middot; Showroom picks</div><div class="big">Deals on today</div></div>
+  <div class="s-count"><div class="n" id="sCount"></div><div class="t">deals on this screen</div></div>
+  <div class="s-chips" id="sChips"><div class="rail" id="sRail"></div></div>
+  <div class="s-stage" id="sStage"><div class="s-cards" id="sCards"></div></div>
+  <div class="s-empty" id="sEmpty" style="display:none">Ask any of us about today&rsquo;s Black Friday deals</div>
+  <div class="s-foot"><div class="s-how"><b>Scan a code</b> with your phone camera to open that item on impulsecameras.com</div><div class="s-pos" id="sPos"></div></div>
+</section>
+
+<section class="scene shift" id="instore">
+  <div class="brand" role="img" aria-label="Impulse Cameras"></div>
+  <div class="s-title"><div class="eyebrow">Black Friday &middot; in store</div><div class="big">Only at the shop</div></div>
+  <div class="s-count"><div class="n" id="iClock"></div><div class="t">store time</div></div>
+  <div class="i-grid">
+    <div class="i-card i-only" id="iOnly">
+      <div class="eyebrow">In store only</div>
+      <div class="i-h" id="iOnlyH">Win it here, in person</div>
+      <ul class="i-rules" id="iRules"></ul>
+      <div class="i-fine" id="iFine"></div>
+      <div class="i-shelf off" id="iShelf"><span class="num" id="iShelfN"></span><span>sale items on our shelves right now</span></div>
+    </div>
+    <div class="i-card i-merch">
+      <div class="eyebrow" id="iMEye">Impulse merch</div>
+      <div class="i-mstage" id="iMStage">
+        <div class="s-ph"><img id="iMPh" alt=""><span class="s-shelf" id="iMShelf">In store now</span></div>
+        <div class="i-mname" id="iMName"></div>
+        <div class="s-buy">
+          <div class="s-pr"><div class="was" id="iMWas"></div><div class="now" id="iMNow"></div><div class="save" id="iMSave"></div></div>
+          <div class="s-qr qr-tile halo" id="iMQr"></div>
+        </div>
+      </div>
+      <div class="i-mempty" id="iMEmpty" style="display:none">Impulse tees, hoodies and hats are at the counter</div>
+    </div>
+    <div class="i-card i-give">
+      <div class="eyebrow" id="iGEye">Hourly giveaway &middot; in store only</div>
+      <div class="i-ghead" id="iGHead"></div>
+      <div class="i-gprize" id="iGPrize"></div>
+      <div class="i-gcd" id="iGCdWrap"><span class="n" id="iGCd"></span><small id="iGCdCap"></small></div>
+      <div class="i-gbar" id="iGBar"><div class="fill" id="iGFill"></div></div>
+      <div class="i-gnext" id="iGNext"></div>
+      <div class="i-strip" id="iStrip"></div>
+    </div>
+  </div>
+  <div class="s-foot"><div class="s-how i-foot" id="iFoot"></div></div>
+</section>
 <!-- ids and classes the script reads or writes (keep them): boot wifi milestone play whatnot used wall weekBox week odo goalTxt fill left toast
+     sale sCount sChips sRail sStage sCards sEmpty sPos instore iClock iOnly iOnlyH iRules iFine iShelf iShelfN iMEye iMStage iMPh iMShelf iMName iMWas iMNow
+     iMSave iMQr iMEmpty iGEye iGHead iGPrize iGCdWrap iGCd iGCdCap iGBar iGFill iGNext iStrip iFoot; .s-chip .on .s-card .s-ph .s-shelf .s-pr .s-qr
      confetti bCount floats btEye btH btCopy btReset btChamp btArena spot spName spMeta spShot spCta spFr spPh wnMain wnPill wnPillTxt wnHead wnSub
      wnCount wnCd wnRot wnWin wnWinV wnVideo wnBadge wnBidTxt wnTick wnTickIn uStage uFr uPh uEmpty uCount uVendor uGrade uName uNow uWas uSave uQr
      uHandle grid tickin; .bt-e .lead .fr .m .n .v .sh .cell .meta .h .lk .fl -->
@@ -628,8 +787,10 @@ fetch('config.json?cb=' + Date.now()).then(function(r){return r.json()})
   .catch(function(){ config = {};
     if (MODE === 'play') scheduleSpot();
     if (MODE === 'whatnot'){ renderW(); } });
-poll();
-setInterval(poll, 75000);
+/* The two Black Friday boards (mode=sale, mode=instore) read their own feeds (tv_bf_boards.js) and never touch live.json,
+   so five more screens do not spend this store's 60 requests/hour/IP on the follower number. Every other mode is unchanged. */
+var BF_ONLY = (MODE === 'sale' || MODE === 'instore');
+if (!BF_ONLY){ poll(); setInterval(poll, 75000); }
 
 /* Fast path for the follower number only. The relay Worker holds a value the
    store Mac pushes every ~20s; this polls it every 4s. The GitHub poll above
@@ -648,7 +809,7 @@ function fastPoll(){
     })
     .catch(function(){});
 }
-if (RELAY.indexOf('http') === 0){ fastPoll(); setInterval(fastPoll, 4000); }
+if (!BF_ONLY && RELAY.indexOf('http') === 0){ fastPoll(); setInterval(fastPoll, 4000); }
 setTimeout(function(){ location.reload(); }, 6*3600*1000); /* hygiene reload */
 
 function fmt(n){ return n.toLocaleString('en-US'); }
@@ -1184,6 +1345,455 @@ function renderC(){
     lines.map(function(l){ return ' &nbsp;&middot;&nbsp; ' +
       l.replace(/(@[\w.]+|#[\w]+)/g, '<span class="tl">$1</span>'); }).join('');
 }
+
+/* ---------- Black Friday 2026: mode=sale (Showrooms) and mode=instore (Register 2) ---------- */
+/* tv_bf.js -- the pure helpers behind the Black Friday boards (board.html?mode=sale and ?mode=instore).
+   build_boards.py inlines this file into board.html (one copy, so node can unit-test it:
+   tools/signage/test/test_bf_board.js). Nothing here touches the page.
+
+   Fire OS 7 / Android 9 WebView: ES5 only (var, function, no arrow functions, no template literals,
+   no optional chaining), same rule as screen_router.js. */
+(function (root) {
+  'use strict';
+
+  /* Which brand each Showroom screen leads with, then everything else in the feed's own order
+     (bf_sale_refresh.py writes the feed in priority order). The names are lower-case keys matched against a
+     brand's name and the raw vendor strings behind it (brand.aka). A lead with no sale items is skipped, so screen 3
+     (Blackmagic had nothing on sale on 2026-11-27) starts at Canon instead of repeating Showroom 1's Sony. */
+  var LEADS = {1: ['sony'], 2: ['sigma'], 3: ['blackmagic', 'canon'], 4: ['godox', 'amaran']};
+
+  function low(s) { return String(s == null ? '' : s).replace(/^\s+|\s+$/g, '').toLowerCase(); }
+
+  function matches(brand, key) {
+    var k = low(key);
+    if (!k) return false;
+    var name = low(brand.name);
+    if (name === k || name.indexOf(k) === 0) return true;
+    var aka = brand.aka || [];
+    for (var i = 0; i < aka.length; i++) {
+      if (aka[i] === k || String(aka[i]).indexOf(k) === 0) return true;
+    }
+    return false;
+  }
+
+  /* The brands this screen walks through, in order.
+     wanted = ?brands=Sony,Canon as an array (order and subset; names that match nothing are ignored; if
+     none match, the default order is used so a typo never blanks a screen). Otherwise the screen's own lead
+     brand(s) first, then every other brand with items. */
+  function brandOrder(brands, wanted, screen) {
+    var pool = [];
+    for (var i = 0; i < (brands || []).length; i++)
+      if (brands[i] && brands[i].items && brands[i].items.length) pool.push(brands[i]);
+    var out = [], used = {};
+    function take(key) {
+      for (var j = 0; j < pool.length; j++)
+        if (!used[j] && matches(pool[j], key)) { used[j] = 1; out.push(pool[j]); return; }
+    }
+    if (wanted && wanted.length) {
+      for (var w = 0; w < wanted.length; w++) take(wanted[w]);
+      if (out.length) return out;
+    }
+    var leads = LEADS[screen] || [];
+    for (var l = 0; l < leads.length; l++) take(leads[l]);
+    for (var p = 0; p < pool.length; p++) if (!used[p]) out.push(pool[p]);
+    return out;
+  }
+
+  function pages(items, per) {
+    var out = [], n = Math.max(1, per | 0);
+    for (var i = 0; i < (items || []).length; i += n) out.push(items.slice(i, i + n));
+    return out;
+  }
+
+  function money(n) {
+    n = Math.round(+n * 100) / 100;                 /* 2499.99 - 1999.99 is 500.00000000000006 in floating point */
+    return '$' + n.toLocaleString('en-US', {minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2});
+  }
+
+  /* {amt: '$500', pct: '20% off' or ''} for a compare-at above a price; null when it is not a markdown. */
+  function save(price, compare) {
+    price = +price; compare = +compare;
+    if (!(compare > price) || !(price > 0)) return null;
+    var pct = Math.round((compare - price) / compare * 100);
+    return {amt: money(compare - price), pct: pct >= 1 ? pct + '% off' : ''};
+  }
+
+  /* ---- QR: the feed ships modules as "<n>:<base64 of n*n bits, row by row, MSB first, 1 = dark>" ---- */
+  function qrSvg(packed) {
+    var m = /^(\d{2,3}):([A-Za-z0-9+\/]+={0,2})$/.exec(String(packed || ''));
+    if (!m) return '';
+    var n = +m[1], raw;
+    try { raw = atob(m[2]); } catch (e) { return ''; }
+    if (n < 17 || n > 177 || raw.length * 8 < n * n) return '';
+    var d = '';
+    for (var y = 0; y < n; y++) {
+      var x = 0;
+      while (x < n) {
+        var i = y * n + x;
+        if (!((raw.charCodeAt(i >> 3) >> (7 - (i & 7))) & 1)) { x++; continue; }
+        var x0 = x;
+        while (x < n) {
+          var j = y * n + x;
+          if (!((raw.charCodeAt(j >> 3) >> (7 - (j & 7))) & 1)) break;
+          x++;
+        }
+        d += 'M' + x0 + ' ' + y + 'h' + (x - x0) + 'v1h-' + (x - x0) + 'z';
+      }
+    }
+    /* 2 modules of quiet zone, same as the other boards' QRs; the white tile around it adds the rest. The
+       inline stroke:none beats the .qr-tile rule that strokes segno's line-drawn codes (a stroke here would
+       fatten every module and break the code). */
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ' + (n + 4) + ' ' + (n + 4) +
+           '" shape-rendering="crispEdges"><path fill="#000" style="stroke:none" d="' + d + '"/></svg>';
+  }
+
+  /* ---- clock: ?now=2026-11-27T15:20:00-06:00 fakes the time (offset from the real clock; it keeps ticking) ---- */
+  function parseNow(str, realMs) {
+    if (!str) return 0;
+    var t = Date.parse(str);
+    return isNaN(t) ? 0 : t - realMs;
+  }
+
+  /* ---- hourly giveaways ----
+     g = {slots:[{start, draw, label, drawLabel, prize}], rules:[...]} (tools/signage/bf_giveaways.json).
+     Each slot is live from `start` until `draw`, when its winner is drawn. Returns everything the board draws:
+       phase  'before' (nothing started) | 'live' | 'between' | 'after' (all drawn)
+       slots  [{label, drawLabel, prize, state: 'done' | 'live' | 'next' | 'later'}]
+       cur / next  index of the live slot / the first slot still to come (-1 when none)
+       msLeft  to the live slot's draw; to the next start in 'before' and 'between'; 0 after
+       frac    how much of the live hour has gone (0..1) */
+  function giveawayState(g, now) {
+    var src = (g && g.slots) || [], slots = [], cur = -1, next = -1, done = 0;
+    for (var i = 0; i < src.length; i++) {
+      var s = src[i], st = Date.parse(s.start), dr = Date.parse(s.draw);
+      if (isNaN(st) || isNaN(dr) || dr <= st) continue;          /* a bad row is skipped, never fatal */
+      var state = now >= dr ? 'done' : (now >= st ? 'live' : 'later');
+      var k = slots.length;
+      if (state === 'done') done++;
+      if (state === 'live' && cur < 0) cur = k;
+      if (state === 'later' && next < 0) { next = k; state = 'next'; }
+      slots.push({label: s.label, drawLabel: s.drawLabel, prize: s.prize, state: state, st: st, dr: dr});
+    }
+    var phase = cur >= 0 ? 'live' : (!slots.length || done === slots.length ? 'after' : (done ? 'between' : 'before'));
+    var msLeft = 0, frac = 0;
+    if (phase === 'live') { msLeft = slots[cur].dr - now; frac = (now - slots[cur].st) / (slots[cur].dr - slots[cur].st); }
+    else if (next >= 0) msLeft = slots[next].st - now;
+    return {phase: phase, slots: slots, cur: cur, next: next, msLeft: Math.max(0, msLeft),
+            frac: Math.max(0, Math.min(1, frac)), done: done, total: slots.length};
+  }
+
+  /* 12:34, or 1:02:03 from an hour up */
+  function countdown(ms) {
+    var s = Math.max(0, Math.ceil(ms / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    return (h ? h + ':' + two(m) : two(m)) + ':' + two(sec);
+  }
+
+  /* A feed older than maxHours is not trusted for prices: the cron may have died and a sale may have ended. */
+  function feedFresh(doc, nowMs, maxHours) {
+    var u = doc && +doc.updated;
+    return !!u && (nowMs / 1000 - u) < (maxHours || 6) * 3600;
+  }
+
+  var api = {LEADS: LEADS, matches: matches, brandOrder: brandOrder, pages: pages, money: money, save: save,
+             qrSvg: qrSvg, parseNow: parseNow, giveawayState: giveawayState, countdown: countdown,
+             feedFresh: feedFresh};
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.BF = api;
+})(typeof window !== 'undefined' ? window : this);
+
+/* tv_bf_boards.js -- page code for the two Black Friday boards. build_boards.py inlines it INSIDE board.html's script
+   (it reads q, MODE and config from there) after tv_bf.js, which supplies BF.* (the pure, tested helpers).
+
+     ?mode=sale&screen=1..4   Showroom 1-4: brand-by-brand rotation of on-sale items, per-item QR  (sale.json)
+         &brands=Sony,Canon   brand order / subset (anything that matches nothing is ignored)
+         &secs=10 &per=3      seconds per page, cards per page (tests; config.json sale.secs is the live knob)
+     ?mode=instore            Register 2: in-store only, Impulse merch, hourly giveaway progress  (bf2.json)
+         &now=2026-11-27T15:20:00-06:00   fake the clock to rehearse the giveaway states
+     both: &feed=./           read the feeds from this relative folder (tests) instead of the data branch
+
+   The feeds come from tools/signage/bf_sale_refresh.py (Shopify, read-only, cron). The raw copy is read FIRST: it can lag
+   ~5 minutes, which is nothing for a 15-minute feed, and it keeps these five screens off the 60 requests/hour/IP the
+   contents API allows the whole store (Register 1's follower poll lives on that budget). The contents API is the fallback.
+   Feed text goes in with textContent; the only innerHTML is the QR svg BF.qrSvg builds from digits. ES5 only. */
+var BF_NOW = BF.parseNow(q.get('now'), Date.now());
+function bfNow(){ return Date.now() + BF_NOW; }
+function bfEl(id){ return document.getElementById(id); }
+function bfText(el, s){ el.textContent = s == null ? '' : s; }
+function bfFeedBase(){ var f = q.get('feed'); return f && /^[\w.\/-]+$/.test(f) ? f : ''; }
+function bfGet(name, cb){
+  var base = bfFeedBase();
+  if (base){
+    fetch(base + name + '?cb=' + Date.now()).then(function(r){ if (!r.ok) throw 0; return r.json(); })
+      .then(cb).catch(function(){ cb(null); });
+    return;
+  }
+  var path = 'impulse-cameras/impulse-tv';
+  fetch('https://raw.githubusercontent.com/' + path + '/data/' + name + '?cb=' + Date.now())
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(cb)
+    .catch(function(){
+      fetch('https://api.github.com/repos/' + path + '/contents/' + name + '?ref=data',
+            {headers:{'Accept':'application/vnd.github.raw'}})
+        .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+        .then(cb).catch(function(){ cb(null); });
+    });
+}
+function bfMaxAge(){ return (config && config.bf && +config.bf.maxAgeHours) || 6; }
+function bfFit(el, maxEm, minEm){
+  /* shrink a price until it fits the column it sits in (the font may load after this runs: bfRefit() repeats it) */
+  el.style.fontSize = '';
+  var box = el.parentNode;
+  for (var fs = maxEm; fs > minEm && el.scrollWidth > box.clientWidth; fs -= 0.1) el.style.fontSize = fs.toFixed(1) + 'em';
+}
+function bfRefit(){
+  var ns = document.querySelectorAll('#sale .s-pr .now, #instore .s-pr .now');
+  for (var i = 0; i < ns.length; i++) bfFit(ns[i], 2, 1.1);
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(bfRefit);
+
+/* one price block: struck compare-at, the price, the saving. A missing compare-at (merch at regular price) draws no saving. */
+function bfPrice(it, wasEl, nowEl, saveEl){
+  var s = BF.save(it.price, it.compare);
+  bfText(nowEl, BF.money(it.price));
+  wasEl.textContent = '';
+  saveEl.textContent = '';
+  if (s){
+    wasEl.appendChild(document.createTextNode(BF.money(it.compare)));
+    if (s.pct){ var b = document.createElement('b'); b.textContent = s.pct; wasEl.appendChild(b); }
+    bfText(saveEl, 'Save ' + s.amt);
+  }
+}
+function bfQr(el, packed){ el.innerHTML = BF.qrSvg(packed); }
+
+/* ---------- Showroom sale board ---------- */
+var bfScreen = Math.max(1, Math.min(4, parseInt(q.get('screen'), 10) || 1));
+var bfWant = (q.get('brands') || '').split(',').map(function(s){ return s.replace(/^\s+|\s+$/g, ''); })
+  .filter(function(s){ return s; });
+var bfPlan = [], bfBi = 0, bfPi = 0, bfTimer = null, bfChipKey = '', bfStarted = false;
+function bfSecs(){ return Math.max(3, +q.get('secs') || (config && config.sale && +config.sale.secs) || 10); }
+function bfPer(){ return Math.max(1, Math.min(3, parseInt(q.get('per'), 10) || 3)); }
+
+function bfSaleEmpty(on){
+  bfEl('sale').classList.toggle('is-empty', on);
+  bfEl('sEmpty').style.display = on ? 'flex' : 'none';
+  bfEl('boot').style.display = 'none';
+}
+function bfCard(it, brandName){
+  var d = document.createElement('div'); d.className = 's-card';
+  var ph = document.createElement('div'); ph.className = 's-ph';
+  var img = document.createElement('img'); img.alt = '';
+  img.onerror = function(){ img.style.display = 'none'; };
+  img.src = it.img;
+  ph.appendChild(img);
+  if (it.shelf){ var sh = document.createElement('span'); sh.className = 's-shelf'; sh.textContent = 'In store now'; ph.appendChild(sh); }
+  var body = document.createElement('div'); body.className = 's-body';
+  var eye = document.createElement('div'); eye.className = 's-eye';
+  eye.textContent = brandName + (it.variant ? ' \u00b7 ' + it.variant : '') + (it.alt ? ' \u00b7 +' + it.alt + (it.alt === 1 ? ' version' : ' versions') : '');
+  var name = document.createElement('div'); name.className = 's-name'; name.textContent = it.title;
+  var buy = document.createElement('div'); buy.className = 's-buy';
+  var pr = document.createElement('div'); pr.className = 's-pr';
+  var was = document.createElement('div'); was.className = 'was';
+  var now = document.createElement('div'); now.className = 'now';
+  var sv = document.createElement('div'); sv.className = 'save';
+  pr.appendChild(was); pr.appendChild(now); pr.appendChild(sv);
+  var qr = document.createElement('div'); qr.className = 's-qr qr-tile halo';
+  bfQr(qr, it.qr && (it.qr[String(bfScreen)] || it.qr['1']));
+  buy.appendChild(pr); buy.appendChild(qr);
+  body.appendChild(eye); body.appendChild(name); body.appendChild(buy);
+  d.appendChild(ph); d.appendChild(body);
+  bfPrice(it, was, now, sv);
+  return d;
+}
+function bfMarkChip(){
+  var rail = bfEl('sRail'), kids = rail.children;
+  for (var i = 0; i < kids.length; i++) kids[i].className = 's-chip' + (i === bfBi ? ' on' : '');
+  var box = bfEl('sChips'), c = kids[bfBi];
+  if (!c) return;
+  var x = c.offsetLeft + c.offsetWidth / 2 - box.clientWidth / 2;
+  x = Math.max(0, Math.min(x, rail.scrollWidth - box.clientWidth));
+  rail.style.transform = 'translateX(' + (-x) + 'px)';
+  /* a soft edge on the side that has more chips beyond it, so a chip is never cut with a hard line */
+  var more = rail.scrollWidth - box.clientWidth;
+  box.className = 's-chips' + (x > 1 ? ' fade-l' : '') + (x < more - 1 ? ' fade-r' : '');
+}
+function bfDrawPage(){
+  var cur = bfPlan[bfBi]; if (!cur) return;
+  var items = cur.pages[bfPi] || [];
+  var cards = bfEl('sCards'); cards.innerHTML = '';
+  for (var i = 0; i < items.length; i++) cards.appendChild(bfCard(items[i], cur.brand.name));
+  bfRefit();
+  bfMarkChip();
+  var pos = bfEl('sPos'); pos.textContent = '';
+  pos.appendChild(document.createTextNode(cur.brand.name));
+  var sm = document.createElement('small'); sm.textContent = (bfPi + 1) + ' of ' + cur.pages.length;
+  pos.appendChild(sm);
+  /* warm the next page's photos so the fade lands on pictures, not on empty frames */
+  var nb = bfBi, np = bfPi + 1;
+  if (np >= cur.pages.length){ nb = (bfBi + 1) % bfPlan.length; np = 0; }
+  var nx = (bfPlan[nb].pages[np] || []);
+  for (var k = 0; k < nx.length; k++){ var im = new Image(); im.src = nx[k].img; }
+}
+function bfAdvance(){
+  if (!bfPlan.length) return;
+  var cur = bfPlan[bfBi];
+  bfPi++;
+  if (!cur || bfPi >= cur.pages.length){ bfBi = (bfBi + 1) % bfPlan.length; bfPi = 0; }
+  var stage = bfEl('sStage');
+  stage.classList.add('out');
+  setTimeout(function(){ bfDrawPage(); stage.classList.remove('out'); }, 450);
+}
+function bfLoop(){ bfTimer = setTimeout(function(){ bfAdvance(); bfLoop(); }, bfSecs() * 1000); }
+function gotSale(doc){
+  if (!doc){ if (!bfPlan.length) bfSaleEmpty(true); return; }      /* the fetch failed: keep what is on screen */
+  if (!doc.brands || !BF.feedFresh(doc, Date.now(), bfMaxAge())){
+    /* a feed too old to trust for prices (the cron died, a sale may have ended): say so, show no prices */
+    bfPlan = []; bfSaleEmpty(true); return;
+  }
+  /* a 5-minute refresh must not throw the rotation back to the start: stay on the same brand and page when they still exist */
+  var keep = bfPlan[bfBi] && bfPlan[bfBi].brand.name, keepPi = bfPi;
+  bfPlan = BF.brandOrder(doc.brands, bfWant, bfScreen).map(function(b){ return {brand: b, pages: BF.pages(b.items, bfPer())}; });
+  if (!bfPlan.length){ bfSaleEmpty(true); return; }
+  bfSaleEmpty(false);
+  bfBi = 0; bfPi = 0;
+  for (var i = 0; i < bfPlan.length; i++)
+    if (bfPlan[i].brand.name === keep){ bfBi = i; bfPi = keepPi < bfPlan[i].pages.length ? keepPi : 0; }
+  var n = 0; for (var j = 0; j < bfPlan.length; j++) n += bfPlan[j].brand.items.length;
+  bfText(bfEl('sCount'), fmt(n));
+  var key = bfPlan.map(function(p){ return p.brand.name + p.brand.items.length; }).join('|');
+  if (key !== bfChipKey){
+    bfChipKey = key;
+    var rail = bfEl('sRail'); rail.innerHTML = '';
+    bfPlan.forEach(function(p){
+      var c = document.createElement('span'); c.className = 's-chip';
+      c.appendChild(document.createTextNode(p.brand.name));
+      var sm = document.createElement('small'); sm.textContent = p.brand.items.length; c.appendChild(sm);
+      rail.appendChild(c);
+    });
+  }
+  bfDrawPage();
+  if (!bfStarted){ bfStarted = true; bfLoop(); }
+}
+if (MODE === 'sale'){
+  bfGet('sale.json', gotSale);
+  setInterval(function(){ bfGet('sale.json', gotSale); }, 300000);
+  setTimeout(function(){ if (!bfStarted) bfSaleEmpty(true); }, 15000);     /* nothing arrived: show the ask-us line, keep polling */
+}
+
+/* ---------- Register 2: in store only, Impulse merch, hourly giveaway ---------- */
+/* BF_GIVE_DEFAULT is tools/signage/bf_giveaways.json embedded at build time, so the giveaway panel works even if the
+   feed never loads; bf2.json (same file, carried by bf_sale_refresh.py) replaces it, which is how staff correct a prize
+   or a time without a rebuild. */
+var BF_GIVE_DEFAULT = {"event": "Black Friday giveaways", "tz": "America/Chicago", "dayLabel": "Friday, Nov 27, 9 AM to 7 PM", "fine": "In-store giveaways, Friday Nov 27, 9 AM to 7 PM. 1 free entry for walking in that hour, plus 1 entry per $5 spent. No purchase necessary. Must be present to win. Winner drawn at the end of each hour.", "rules": ["Walk in during the hour: 1 free entry", "Spend $5 in the hour: 1 more entry per $5", "No purchase necessary. Must be present to win."], "slots": [{"start": "2026-11-27T09:00:00-06:00", "draw": "2026-11-27T10:00:00-06:00", "label": "9 AM", "drawLabel": "10 AM", "prize": "Panasonic LUMIX DC-FZ80D"}, {"start": "2026-11-27T10:00:00-06:00", "draw": "2026-11-27T11:00:00-06:00", "label": "10 AM", "drawLabel": "11 AM", "prize": "Peak Design Capture clip"}, {"start": "2026-11-27T11:00:00-06:00", "draw": "2026-11-27T12:00:00-06:00", "label": "11 AM", "drawLabel": "12 PM", "prize": "Jupio Tri-Charge EN-EL15c"}, {"start": "2026-11-27T12:00:00-06:00", "draw": "2026-11-27T13:00:00-06:00", "label": "12 PM", "drawLabel": "1 PM", "prize": "Millennium Kodak Charmera"}, {"start": "2026-11-27T13:00:00-06:00", "draw": "2026-11-27T14:00:00-06:00", "label": "1 PM", "drawLabel": "2 PM", "prize": "PGYTECH MagGlow + stand"}, {"start": "2026-11-27T14:00:00-06:00", "draw": "2026-11-27T15:00:00-06:00", "label": "2 PM", "drawLabel": "3 PM", "prize": "Urth beige sling"}, {"start": "2026-11-27T15:00:00-06:00", "draw": "2026-11-27T16:00:00-06:00", "label": "3 PM", "drawLabel": "4 PM", "prize": "Nomatic McKinnon battery case"}, {"start": "2026-11-27T16:00:00-06:00", "draw": "2026-11-27T17:00:00-06:00", "label": "4 PM", "drawLabel": "5 PM", "prize": "Delkin Fat Gecko Dual Mount"}, {"start": "2026-11-27T17:00:00-06:00", "draw": "2026-11-27T18:00:00-06:00", "label": "5 PM", "drawLabel": "6 PM", "prize": "Polaroid Go Gen 2 Everything Box"}, {"start": "2026-11-27T18:00:00-06:00", "draw": "2026-11-27T19:00:00-06:00", "label": "6 PM", "drawLabel": "7 PM", "prize": "$100 Impulse gift card"}]};
+var bfGive = BF_GIVE_DEFAULT, bf2 = null, bfMerch = [], bfMi = 0, bfMTimer = null, bfStripKey = '';
+function bfRules(){
+  var ul = bfEl('iRules'); ul.innerHTML = '';
+  var fine = '';
+  (bfGive.rules || []).forEach(function(r){
+    if (/^no purchase/i.test(r)){ fine = r; return; }
+    var li = document.createElement('li'); li.textContent = r; ul.appendChild(li);
+  });
+  bfText(bfEl('iFine'), fine);
+  bfText(bfEl('iFoot'), bfGive.fine || '');
+}
+function bfClock(){
+  var d = new Date(bfNow()), s;
+  try { s = d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', timeZone: bfGive.tz || 'America/Chicago'}); }
+  catch (e) { s = d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}); }
+  bfText(bfEl('iClock'), s);
+}
+function bfGiveDraw(){
+  var st = BF.giveawayState(bfGive, bfNow());
+  var sl = st.slots, cur = sl[st.cur], nxt = sl[st.next];
+  var head = bfEl('iGHead'), prize = bfEl('iGPrize'), wrap = bfEl('iGCdWrap'), next = bfEl('iGNext');
+  var showCd = true, bar = 0;
+  if (st.phase === 'live'){
+    bfText(head, 'Drawing at ' + cur.drawLabel);
+    bfText(prize, cur.prize);
+    bfText(bfEl('iGCdCap'), 'until the draw');
+    bar = st.frac;
+  } else if (st.phase === 'before' || st.phase === 'between'){
+    bfText(head, (st.phase === 'before' ? 'Giveaways start at ' : 'Next hour opens at ') + (nxt ? nxt.label : ''));
+    bfText(prize, nxt ? 'Up first: ' + nxt.prize : '');
+    bfText(bfEl('iGCdCap'), 'until the hour opens');
+    showCd = st.msLeft < 12 * 3600 * 1000;                   /* a countdown from another day means nothing */
+  } else {
+    bfText(head, 'That’s a wrap');
+    bfText(prize, st.total ? 'All ' + st.total + ' prizes drawn. Thank you for celebrating with us!' : '');
+    showCd = false; bar = 1;
+  }
+  /* once every hour has been drawn the how-to-enter lines are history: say thank you instead of inviting more entries */
+  bfEl('iOnly').classList.toggle('over', st.phase === 'after');
+  bfText(bfEl('iOnlyH'), st.phase === 'after' ? 'Giveaways are done. Thank you!' : 'Win it here, in person');
+  wrap.style.display = showCd ? '' : 'none';
+  bfText(bfEl('iGCd'), BF.countdown(st.msLeft));
+  bfEl('iGFill').style.width = (bar * 100).toFixed(1) + '%';
+  next.textContent = '';
+  if (st.phase === 'live' && nxt){
+    next.appendChild(document.createTextNode('Next: '));
+    var b = document.createElement('b'); b.textContent = nxt.drawLabel + ' · ' + nxt.prize; next.appendChild(b);
+  } else if (st.phase === 'live') { next.textContent = 'That is the last draw of the day.'; }
+  else if (st.phase !== 'after' && bfGive.dayLabel) { next.textContent = bfGive.dayLabel + ' · in store only'; }
+  else { next.textContent = st.done + ' of ' + st.total + ' drawn'; }
+  /* the strip: one pill per hour, done / live / next. Rebuilt only when a state changes. */
+  var key = st.phase + ':' + sl.map(function(s){ return s.state; }).join('');
+  if (key !== bfStripKey){
+    bfStripKey = key;
+    var strip = bfEl('iStrip'); strip.innerHTML = '';
+    sl.forEach(function(s){
+      var p = document.createElement('span'); p.className = 'i-pill ' + (s.state === 'later' ? '' : s.state);
+      p.textContent = s.label; strip.appendChild(p);
+    });
+  }
+}
+function bfMerchDraw(first){
+  var stage = bfEl('iMStage'), empty = bfEl('iMEmpty');
+  if (!bfMerch.length){ stage.style.display = 'none'; empty.style.display = 'flex'; return; }
+  stage.style.display = ''; empty.style.display = 'none';
+  var it = bfMerch[bfMi % bfMerch.length];
+  var img = bfEl('iMPh'); img.style.display = ''; img.onerror = function(){ img.style.display = 'none'; }; img.src = it.img;
+  bfEl('iMShelf').style.display = it.shelf ? '' : 'none';
+  bfText(bfEl('iMName'), it.title);
+  bfPrice(it, bfEl('iMWas'), bfEl('iMNow'), bfEl('iMSave'));
+  bfQr(bfEl('iMQr'), typeof it.qr === 'string' ? it.qr : '');
+  bfFit(bfEl('iMNow'), 2, 1.1);
+}
+function bfMerchStep(){
+  if (bfMerch.length < 2) return;
+  var stage = bfEl('iMStage');
+  stage.classList.add('out');
+  setTimeout(function(){ bfMi = (bfMi + 1) % bfMerch.length; bfMerchDraw(); stage.classList.remove('out'); }, 420);
+}
+function gotBf2(doc){
+  if (!doc) return;
+  bf2 = doc;
+  if (doc.giveaways && doc.giveaways.slots && doc.giveaways.slots.length){
+    /* the feed's schedule wins; anything it leaves out (fine print, day label) comes from the embedded copy */
+    var g = {}, k;
+    for (k in BF_GIVE_DEFAULT) g[k] = BF_GIVE_DEFAULT[k];
+    for (k in doc.giveaways) g[k] = doc.giveaways[k];
+    bfGive = g; bfRules(); bfStripKey = '';
+  }
+  var fresh = BF.feedFresh(doc, Date.now(), bfMaxAge());
+  var keep = bfMerch[bfMi % (bfMerch.length || 1)];
+  bfMerch = fresh && doc.merch && doc.merch.items ? doc.merch.items : [];
+  bfMi = 0;
+  for (var i = 0; keep && i < bfMerch.length; i++) if (bfMerch[i].id === keep.id) bfMi = i;
+  var n = fresh && doc.shelf ? +doc.shelf.on_sale_in_store : 0;
+  bfEl('iShelf').classList.toggle('off', !(n > 0));
+  bfText(bfEl('iShelfN'), n > 0 ? fmt(n) : '');
+  bfMerchDraw();
+}
+if (MODE === 'instore'){
+  bfEl('boot').style.display = 'none';
+  bfRules(); bfClock(); bfGiveDraw(); bfMerchDraw();
+  setInterval(function(){ bfClock(); bfGiveDraw(); }, 1000);
+  bfMTimer = setInterval(bfMerchStep, 7000);
+  bfGet('bf2.json', gotBf2);
+  setInterval(function(){ bfGet('bf2.json', gotBf2); }, 300000);
+}
+
 })();
 </script>
 </body>
